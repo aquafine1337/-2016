@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Плеер</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --accent: #a050ff;
+  --accent-light: #bf6fff;
+  --accent-r: 160; --accent-g: 80; --accent-b: 255;
+  --card-w: min(430px, 94vw);
+  --card-bg: rgba(14,10,22,0.93);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { width:100%; height:100%; overflow:hidden; }
+body {
+  background:#000;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Inter',sans-serif;
+  perspective:1200px;
+  min-height:100dvh;
+}
+canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
+#bg-overlay { position:fixed; inset:0; z-index:1; pointer-events:none; transition:background 2s; }
+#lightning  { position:fixed; inset:0; z-index:2; pointer-events:none; }
+
+/* ── CARD ── */
+.scene { position:relative; z-index:10; transform-style:preserve-3d; }
+.card {
+  background: var(--card-bg);
+  border: 1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.22);
+  border-radius: clamp(14px,2vw,22px);
+  width: var(--card-w);
+  overflow: hidden;
+  backdrop-filter: blur(28px);
+  box-shadow: 0 32px 80px rgba(0,0,0,.75), inset 0 0 0 .5px rgba(255,255,255,.04);
+  transform-style: preserve-3d;
+}
+
+/* ── BANNER ── */
+.banner {
+  position:relative; width:100%;
+  height: clamp(110px,22vw,155px);
+  overflow:hidden; cursor:pointer;
+  background: linear-gradient(135deg,#1a0a2e,#2d0b4e,#06060f);
+}
+.banner-img-el { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; }
+.banner-edit-btn {
+  position:absolute; top:10px; right:10px;
+  width:32px; height:32px; border-radius:10px;
+  background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.18);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:all .2s; backdrop-filter:blur(8px);
+  color:rgba(255,255,255,.8);
+}
+.banner-edit-btn:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.35); border-color:var(--accent); }
+.banner-placeholder {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+}
+/* decorative gradient blobs in banner */
+.blob {
+  position:absolute; border-radius:50%; filter:blur(40px); opacity:.35; pointer-events:none;
+}
+.blob1 { width:160px; height:160px; background:var(--accent); top:-40px; left:-20px; }
+.blob2 { width:120px; height:120px; background:#ff5080; top:20px; right:10px; opacity:.2; }
+
+/* ── AVATAR ── */
+.avatar-row {
+  display:flex; justify-content:center;
+  margin-top: calc(clamp(30px,6vw,42px) * -1);
+  margin-bottom: clamp(8px,1.5vw,12px);
+  position:relative; z-index:5;
+}
+.avatar-wrap {
+  position:relative;
+  width: clamp(56px,12vw,68px);
+  height: clamp(56px,12vw,68px);
+}
+.avatar-img {
+  width:100%; height:100%; border-radius:50%;
+  border:3px solid var(--accent);
+  object-fit:cover; background:#1a0a2e;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; transition:border-color .3s;
+}
+.avatar-edit {
+  position:absolute; bottom:-2px; right:-2px;
+  width:22px; height:22px; border-radius:50%;
+  background: var(--accent);
+  border:2px solid var(--card-bg);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:transform .2s;
+}
+.avatar-edit:hover { transform:scale(1.15); }
+
+/* ── TRACK INFO ── */
+.username {
+  font-family:'Unbounded',sans-serif;
+  font-size: clamp(12px,3vw,15px);
+  font-weight:600; color:#fff;
+  text-align:center; letter-spacing:.04em;
+  margin-bottom: clamp(10px,2vw,14px);
+}
+.cover-area { display:flex; justify-content:center; margin-bottom: clamp(10px,2vw,14px); }
+.cover-img {
+  width: clamp(72px,16vw,92px);
+  height: clamp(72px,16vw,92px);
+  border-radius:14px; object-fit:cover;
+  border:2px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.38);
+  background:#1a0a2e; transition:border-color .3s;
+  box-shadow: 0 8px 28px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
+}
+.cover-img.playing { animation:spin 12s linear infinite; border-radius:50%; }
+@keyframes spin { to { transform:rotate(360deg) } }
+
+.track-info {
+  text-align:center; padding:0 clamp(16px,4vw,26px);
+  margin-bottom: clamp(12px,2.5vw,18px); min-height:38px;
+}
+.track-title {
+  font-family:'Unbounded',sans-serif;
+  font-size: clamp(10px,2.5vw,13px);
+  color:#e0d0ff; letter-spacing:.02em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.track-artist { font-size: clamp(10px,2.2vw,12px); color:rgba(200,170,255,.5); margin-top:3px; }
+
+/* ── PROGRESS ── */
+.progress-wrap { padding:0 clamp(16px,4vw,26px); margin-bottom:5px; }
+.pbar-bg {
+  width:100%; height:4px; background:rgba(255,255,255,.07);
+  border-radius:2px; cursor:pointer; position:relative; overflow:visible;
+}
+.pbar-fill {
+  height:100%; width:0%; border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-light));
+  transition:width .5s linear; position:relative;
+}
+.pbar-fill::after {
+  content:''; position:absolute; right:-6px; top:-5px;
+  width:14px; height:14px; background:var(--accent-light);
+  border-radius:50%; box-shadow:0 0 10px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.6);
+}
+.times {
+  display:flex; justify-content:space-between;
+  padding:5px clamp(16px,4vw,26px) 0;
+  font-size:10px; color:rgba(200,170,255,.4);
+  margin-bottom: clamp(12px,2.5vw,18px);
+}
+
+/* ── CONTROLS ── */
+.controls {
+  display:flex; align-items:center; justify-content:center;
+  gap: clamp(14px,4vw,22px);
+  margin-bottom: clamp(12px,2.5vw,18px);
+}
+.btn {
+  background:none; border:none; cursor:pointer;
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  transition:background .2s, transform .15s; color:rgba(200,170,255,.65);
+  padding: clamp(6px,1.5vw,9px);
+}
+.btn:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.12); color:var(--accent-light); transform:scale(1.1); }
+.btn svg { width:clamp(16px,4vw,21px); height:clamp(16px,4vw,21px); }
+.btn-play {
+  width: clamp(44px,10vw,54px);
+  height: clamp(44px,10vw,54px);
+  background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.15);
+  border:1.5px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.45)!important;
+  color:var(--accent-light);
+}
+.btn-play:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.28); }
+.btn-play svg { width:clamp(18px,4.5vw,24px); height:clamp(18px,4.5vw,24px); }
+
+/* ── VOLUME ── */
+.volume-row {
+  display:flex; align-items:center; gap:10px;
+  padding:0 clamp(16px,4vw,26px);
+  margin-bottom: clamp(14px,2.5vw,20px);
+}
+.volume-row svg { flex-shrink:0; color:rgba(200,170,255,.45); width:15px; height:15px; }
+input[type=range] {
+  -webkit-appearance:none; flex:1; height:3px;
+  background:rgba(255,255,255,.1); border-radius:2px; outline:none; cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:13px; height:13px;
+  border-radius:50%; background:var(--accent); cursor:pointer;
+  box-shadow:0 0 6px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.5);
+}
+.vol-val { font-size:10px; color:rgba(200,170,255,.38); min-width:24px; text-align:right; }
+
+/* ── SETTINGS TOGGLE ── */
+.settings-row { display:flex; justify-content:center; padding-bottom:6px; }
+.settings-pill {
+  display:flex; align-items:center; gap:6px;
+  background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.07);
+  border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
+  border-radius:20px; padding:5px 16px;
+  color:rgba(200,170,255,.5); font-size:10px;
+  font-family:'Inter',sans-serif; cursor:pointer;
+  transition:all .2s; letter-spacing:.05em;
+}
+.settings-pill:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.15); color:rgba(200,170,255,.9); border-color:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.4); }
+
+/* ── SETTINGS PANEL ── */
+.settings-panel {
+  display:none; overflow-y:auto; max-height:55vh;
+  padding:14px clamp(14px,3.5vw,22px) 10px;
+  border-top:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.1);
+  scrollbar-width:none;
+}
+.settings-panel::-webkit-scrollbar { display:none; }
+.settings-panel.open { display:block; }
+
+.s-section {
+  font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.55);
+  margin:12px 0 8px; padding-bottom:5px;
+  border-bottom:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.08);
+  display:flex; align-items:center; gap:6px;
+}
+.s-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:11px; }
+.s-label { font-size:11px; color:rgba(200,170,255,.55); }
+.presets { display:flex; gap:7px; align-items:center; flex-wrap:wrap; }
+
+/* Color dots */
+.cdot {
+  width:21px; height:21px; border-radius:50%; cursor:pointer;
+  border:2px solid transparent; transition:transform .15s, border-color .15s; flex-shrink:0;
+}
+.cdot:hover { transform:scale(1.2); }
+.cdot.on { border-color:#fff; box-shadow:0 0 8px rgba(255,255,255,.3); }
+input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
+
+/* Swatches */
+.swatch {
+  width:26px; height:20px; border-radius:5px; cursor:pointer;
+  border:2px solid transparent; transition:transform .15s, border-color .15s;
+}
+.swatch:hover { transform:scale(1.1); }
+.swatch.on { border-color:#fff; }
+
+/* Weather grid */
+.wx-grid {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px;
+}
+.wx-btn {
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.14);
+  border-radius:10px; padding:7px 3px 6px;
+  cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;
+  transition:all .2s; color:rgba(200,170,255,.55); font-size:9px;
+  font-family:'Inter',sans-serif; letter-spacing:.02em;
+}
+.wx-btn:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.12); border-color:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.4); color:#e0d0ff; }
+.wx-btn.on { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.22); border-color:var(--accent); color:#fff; }
+.wx-icon { display:block; line-height:1; }
+
+/* Size & tilt buttons */
+.sz-btns,.small-btns { display:flex; gap:5px; }
+.sz-btn,.s-btn {
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.14);
+  border-radius:7px; padding:4px 11px; font-size:10px;
+  font-family:'Inter',sans-serif; color:rgba(200,170,255,.55); cursor:pointer; transition:all .2s;
+}
+.sz-btn:hover,.s-btn:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.1); color:#e0d0ff; }
+.sz-btn.on,.s-btn.on { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.22); border-color:var(--accent); color:#fff; }
+
+/* Slider rows */
+.sl-row { display:flex; align-items:center; gap:8px; }
+.sl-row input[type=range] { width:85px; flex:none; }
+.sl-v { font-size:10px; color:rgba(200,170,255,.4); min-width:20px; }
+
+/* Upload buttons */
+.up-btn {
+  display:flex; align-items:center; gap:6px;
+  background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.08);
+  border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.22);
+  border-radius:8px; padding:5px 12px;
+  color:rgba(200,170,255,.65); font-size:10px;
+  font-family:'Inter',sans-serif; cursor:pointer; transition:all .2s;
+}
+.up-btn:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18); color:#fff; }
+
+.loading { text-align:center; font-size:11px; color:rgba(200,170,255,.35); padding:4px 0 0; }
+
+#sc-widget { display:none; }
+
+/* ── MOBILE ── */
+@media (max-width:480px) {
+  .wx-grid { grid-template-columns:repeat(4,1fr); gap:5px; }
+  .wx-btn { font-size:8px; padding:6px 2px 5px; border-radius:8px; }
+  .settings-panel { max-height:50vh; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div id="bg-overlay"></div>
+<div id="lightning"></div>
+
+<input type="file" id="up-banner" accept="image/*" style="display:none">
+<input type="file" id="up-avatar" accept="image/*" style="display:none">
+
+<div class="scene" id="scene">
+ <div class="card" id="card">
+
+  <!-- BANNER -->
+  <div class="banner" id="banner">
+   <div class="blob blob1" id="blob1"></div>
+   <div class="blob blob2"></div>
+   <img class="banner-img-el" id="banner-img" src="" alt="">
+   <div class="banner-placeholder" id="banner-ph">
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+   </div>
+   <div class="banner-edit-btn" onclick="document.getElementById('up-banner').click()" title="Изменить баннер">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+   </div>
+  </div>
+
+  <!-- AVATAR (поднят выше, поверх баннера) -->
+  <div class="avatar-row">
+   <div class="avatar-wrap">
+    <div class="avatar-img" id="avatar-img">
+     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(160,80,255,.5)" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    </div>
+    <div class="avatar-edit" onclick="document.getElementById('up-avatar').click()" title="Изменить аватар">
+     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+    </div>
+   </div>
+  </div>
+
+  <div class="username">на подумать</div>
+
+  <!-- COVER -->
+  <div class="cover-area">
+   <img class="cover-img" id="cover" src="" alt="" style="background:linear-gradient(135deg,#2d0b4e,#06060f)"/>
+  </div>
+
+  <div class="track-info">
+   <div class="track-title" id="title">Загрузка...</div>
+   <div class="track-artist" id="artist"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+   <div class="pbar-bg" id="pbar-bg"><div class="pbar-fill" id="pbar-fill"></div></div>
+  </div>
+  <div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+   <button class="btn" id="btn-prev">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+   </button>
+   <button class="btn btn-play" id="btn-play">
+    <svg id="ico-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <svg id="ico-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+   </button>
+   <button class="btn" id="btn-next">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+   </button>
+  </div>
+
+  <!-- VOLUME -->
+  <div class="volume-row">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+   <input type="range" id="vol-range" min="0" max="100" value="80">
+   <span class="vol-val" id="vol-val">80</span>
+  </div>
+
+  <!-- SETTINGS TOGGLE -->
+  <div class="settings-row">
+   <button class="settings-pill" id="settings-btn">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    дизайн
+   </button>
+  </div>
+
+  <!-- SETTINGS PANEL -->
+  <div class="settings-panel" id="s-panel">
+
+   <!-- WEATHER -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+    Атмосфера
+   </div>
+   <div class="wx-grid">
+    <!-- SVG weather icons inline, no emoji -->
+    <button class="wx-btn on" data-wx="digits">
+     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><text x="3" y="16" font-size="11" fill="currentColor" stroke="none" font-family="monospace">01</text></svg>
+     цифры
+    </button>
+    <button class="wx-btn" data-wx="waterfall">
+     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v10m0 0c0 4-4 6-4 10m4-10c0 4 4 6 4 10M8 6H4m16 0h-4"/></svg>
+     водопад
+    </button>
+    <button class="wx-btn" data-wx="rain">
+     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="16" y1="19" x2="16" y2="21"/></svg>
+     дождь
+    </button>
+    <button class="wx-btn" data-wx="storm">
+     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"/><polyline points="13 11 9 17 15 17 11 23"/></svg>
+     гроза
+    </button>
+    <button class="wx-btn" data-wx="wind">
+     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
+     ветер
+    </button>
+    <button class="wx-btn" data-wx="snow">
+     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="2" x2="12" y2="22"/><path d="m20 6-8 4-8-4"/><path d="m4 18 8-4 8 4"/><path d="m20 18-8-4-8 4"/><path d="m4 6 8 4 8-4"/></svg>
+     снег
+    </button>
+    <button class="wx-btn" data-wx="fog">
+     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h18M3 12h18M3 16h18" opacity=".6"/><ellipse cx="12" cy="8" rx="8" ry="3" opacity=".3"/></svg>
+     туман
+    </button>
+    <button class="wx-btn" data-wx="stars">
+     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+     звёзды
+    </button>
+   </div>
+
+   <!-- ACCENT -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+    Цвет акцента
+   </div>
+   <div class="s-row">
+    <div class="presets">
+     <div class="cdot on" data-a="#a050ff" data-l="#bf6fff" style="background:#a050ff"></div>
+     <div class="cdot" data-a="#ff5080" data-l="#ff80a0" style="background:#ff5080"></div>
+     <div class="cdot" data-a="#00c8ff" data-l="#60d8ff" style="background:#00c8ff"></div>
+     <div class="cdot" data-a="#00e5a0" data-l="#50f0b8" style="background:#00e5a0"></div>
+     <div class="cdot" data-a="#ff9020" data-l="#ffb060" style="background:#ff9020"></div>
+     <div class="cdot" data-a="#ff3c3c" data-l="#ff7070" style="background:#ff3c3c"></div>
+     <div class="cdot" data-a="#f0d020" data-l="#f8e060" style="background:#f0d020"></div>
+     <input type="color" id="ca-pick" value="#a050ff" style="width:21px;height:21px;border-radius:50%;border:2px solid rgba(255,255,255,.2);">
+    </div>
+   </div>
+
+   <!-- PARTICLE COLOR -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="4" cy="4" r="1"/><circle cx="20" cy="4" r="1"/><circle cx="4" cy="20" r="1"/><circle cx="20" cy="20" r="1"/></svg>
+    Цвет фона
+   </div>
+   <div class="s-row">
+    <div class="presets">
+     <div class="cdot on" data-f="#a050ff" style="background:#a050ff"></div>
+     <div class="cdot" data-f="#00ff88" style="background:#00ff88"></div>
+     <div class="cdot" data-f="#00c8ff" style="background:#00c8ff"></div>
+     <div class="cdot" data-f="#ff5080" style="background:#ff5080"></div>
+     <div class="cdot" data-f="#ffffff" style="background:#fff"></div>
+     <div class="cdot" data-f="#f0d020" style="background:#f0d020"></div>
+     <div class="cdot" data-f="#ff6020" style="background:#ff6020"></div>
+     <input type="color" id="cf-pick" value="#a050ff" style="width:21px;height:21px;border-radius:50%;border:2px solid rgba(255,255,255,.2);">
+    </div>
+   </div>
+
+   <!-- CARD BG -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+    Фон карточки
+   </div>
+   <div class="s-row">
+    <div class="presets">
+     <div class="swatch on" data-bg="rgba(14,10,22,0.93)" style="background:rgba(14,10,22,0.97)"></div>
+     <div class="swatch" data-bg="rgba(6,18,32,0.93)" style="background:rgba(6,18,32,0.97)"></div>
+     <div class="swatch" data-bg="rgba(20,6,18,0.93)" style="background:rgba(20,6,18,0.97)"></div>
+     <div class="swatch" data-bg="rgba(5,18,8,0.93)" style="background:rgba(5,18,8,0.97)"></div>
+     <div class="swatch" data-bg="rgba(28,20,8,0.93)" style="background:rgba(28,20,8,0.97)"></div>
+     <div class="swatch" data-bg="rgba(255,255,255,0.08)" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2)"></div>
+    </div>
+   </div>
+
+   <!-- PAGE BG -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><rect x="6" y="6" width="12" height="12" rx="1" opacity=".5"/></svg>
+    Фон страницы
+   </div>
+   <div class="s-row">
+    <div class="presets">
+     <div class="swatch on" data-p="#000" style="background:#000;border:1px solid rgba(255,255,255,.15)"></div>
+     <div class="swatch" data-p="#08041a" style="background:#08041a"></div>
+     <div class="swatch" data-p="#030d18" style="background:#030d18"></div>
+     <div class="swatch" data-p="#0d0306" style="background:#0d0306"></div>
+     <div class="swatch" data-p="#040d08" style="background:#040d08"></div>
+     <input type="color" id="cp-pick" value="#000000" style="width:26px;height:20px;border-radius:5px;border:2px solid rgba(255,255,255,.2);">
+    </div>
+   </div>
+
+   <!-- INTENSITY & SPEED -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Интенсивность
+   </div>
+   <div class="s-row">
+    <span class="s-label">Кол-во</span>
+    <div class="sl-row"><input type="range" id="s-int" min="1" max="10" value="5"><span class="sl-v" id="v-int">5</span></div>
+   </div>
+   <div class="s-row">
+    <span class="s-label">Скорость</span>
+    <div class="sl-row"><input type="range" id="s-spd" min="1" max="10" value="5"><span class="sl-v" id="v-spd">5</span></div>
+   </div>
+
+   <!-- CARD SIZE -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+    Размер
+   </div>
+   <div class="s-row">
+    <div class="sz-btns">
+     <button class="sz-btn" data-w="320">XS</button>
+     <button class="sz-btn" data-w="380">S</button>
+     <button class="sz-btn on" data-w="430">M</button>
+     <button class="sz-btn" data-w="510">L</button>
+     <button class="sz-btn" data-w="600">XL</button>
+    </div>
+   </div>
+
+   <!-- TILT -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 9-6 6 6 6"/><path d="m15 9 6 6-6 6"/></svg>
+    3D наклон
+   </div>
+   <div class="s-row">
+    <span class="s-label">Сила</span>
+    <div class="sl-row"><input type="range" id="s-tilt" min="0" max="28" value="14"><span class="sl-v" id="v-tilt">14</span></div>
+   </div>
+
+   <!-- UPLOADS -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Изображения
+   </div>
+   <div class="s-row">
+    <span class="s-label">Баннер</span>
+    <button class="up-btn" onclick="document.getElementById('up-banner').click()">
+     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+     Загрузить
+    </button>
+   </div>
+   <div class="s-row">
+    <span class="s-label">Аватар</span>
+    <button class="up-btn" onclick="document.getElementById('up-avatar').click()">
+     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+     Загрузить
+    </button>
+   </div>
+
+  </div><!-- /s-panel -->
+
+  <div class="loading" id="status">Подключение...</div>
+ </div><!-- /card -->
+</div><!-- /scene -->
+
+<iframe id="sc-widget"
+ src="https://w.soundcloud.com/player/?url=https://soundcloud.com/1707213/sets/na-podumat&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false"
+ width="100%" height="166" scrolling="no" frameborder="no" style="display:none">
+</iframe>
+<script src="https://w.soundcloud.com/player/api.js"></script>
+
+<script>
+// ── CANVAS ──────────────────────────────────────────────────
+const cv  = document.getElementById('bg');
+const ctx = cv.getContext('2d');
+let W,H, wx='digits', fR=160,fG=80,fB=255, intensV=5, spdV=5, parts=[];
+
+function h2r(hex){ return {r:parseInt(hex.slice(1,3),16),g:parseInt(hex.slice(3,5),16),b:parseInt(hex.slice(5,7),16)}; }
+
+function rsz(){ W=cv.width=innerWidth; H=cv.height=innerHeight; init(); }
+rsz(); addEventListener('resize', rsz);
+
+function init(){
+  parts=[];
+  if(wx==='digits'||wx==='waterfall'){
+    const sp=14, n=Math.floor(W/sp);
+    for(let i=0;i<n;i++) parts.push({x:i*sp,y:Math.random()*-H,spd:(Math.random()*1.5+.5)*(spdV/5),a:Math.random()*.5+.15,len:~~(Math.random()*22+8)});
+  } else if(wx==='rain'||wx==='storm'){
+    const n=~~(500*(intensV/5)*(wx==='storm'?1.4:1));
+    for(let i=0;i<n;i++) parts.push({x:Math.random()*W,y:Math.random()*H,vy:(Math.random()*8+6)*(spdV/5),vx:-1.5,len:~~(Math.random()*18+8),a:Math.random()*.4+.15});
+  } else if(wx==='wind'){
+    const n=~~(120*(intensV/5));
+    for(let i=0;i<n;i++) parts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()*6+4)*(spdV/5),vy:(Math.random()-.5)*1.5,len:~~(Math.random()*60+20),a:Math.random()*.3+.1});
+  } else if(wx==='snow'){
+    const n=~~(200*(intensV/5));
+    for(let i=0;i<n;i++) parts.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*3+1,vy:(Math.random()*1.5+.5)*(spdV/5),vx:(Math.random()-.5)*.8,wb:Math.random()*Math.PI*2,wbs:Math.random()*.02+.005,a:Math.random()*.6+.2});
+  } else if(wx==='fog'){
+    const n=~~(40*(intensV/5));
+    for(let i=0;i<n;i++) parts.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*220+80,vx:(Math.random()-.5)*.3*(spdV/5),a:Math.random()*.07+.02});
+  } else if(wx==='stars'){
+    const n=~~(300*(intensV/5));
+    for(let i=0;i<n;i++) parts.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.3,tw:Math.random()*Math.PI*2,tws:Math.random()*.03+.005,ba:Math.random()*.6+.2});
+  }
+}
+
+const CHARS='0123456789';
+let ltTimer=0;
+const ltEl=document.getElementById('lightning');
+
+function lt(){
+  ltEl.style.background=`rgba(200,220,255,${Math.random()*.18+.08})`;
+  setTimeout(()=>ltEl.style.background='',80);
+  setTimeout(()=>{ ltEl.style.background=`rgba(200,220,255,${Math.random()*.1+.05})`; setTimeout(()=>ltEl.style.background='',55); },130);
+}
+
+function frame(){
+  if(wx==='digits'||wx==='waterfall'){
+    ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,W,H);
+    ctx.font='14px monospace';
+    for(let p of parts){
+      for(let j=0;j<p.len;j++){
+        const y=p.y-j*14; if(y<-14||y>H+14) continue;
+        const fade=1-j/p.len;
+        const a = j===0 ? Math.min(p.a*1.5,1) : fade*p.a*.8;
+        ctx.fillStyle = j===0 ? `rgba(220,200,255,${a})` : `rgba(${fR},${fG},${fB},${a})`;
+        ctx.fillText(CHARS[~~(Math.random()*10)],p.x,y);
+      }
+      p.y+=p.spd*(spdV/5);
+      if(p.y-p.len*14>H){ p.y=Math.random()*-100-50; p.spd=(Math.random()*1.5+.5)*(spdV/5); p.a=Math.random()*.5+.15; p.len=~~(Math.random()*22+8); }
+    }
+    if(wx==='waterfall'){
+      const g=ctx.createLinearGradient(0,H*.65,0,H);
+      g.addColorStop(0,`rgba(${fR},${fG},${fB},0)`); g.addColorStop(1,`rgba(${fR},${fG},${fB},.05)`);
+      ctx.fillStyle=g; ctx.fillRect(0,H*.65,W,H*.35);
+    }
+  } else if(wx==='rain'||wx==='storm'){
+    ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle=`rgba(${fR},${fG},${fB},.32)`; ctx.lineWidth=wx==='storm'?1.2:.8;
+    for(let p of parts){
+      ctx.globalAlpha=p.a; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+p.vx*(p.len/8),p.y+p.len); ctx.stroke();
+      ctx.globalAlpha=1; p.x+=p.vx*(spdV/5); p.y+=p.vy*(spdV/5);
+      if(p.y>H){ p.y=-p.len; p.x=Math.random()*W; }
+    }
+    if(wx==='storm'){ ltTimer++; if(ltTimer>~~(60*(6-spdV*.5))&&Math.random()<.025){ lt(); ltTimer=0; } }
+  } else if(wx==='wind'){
+    ctx.fillStyle='rgba(0,0,0,.04)'; ctx.fillRect(0,0,W,H);
+    for(let p of parts){
+      ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-p.len,p.y-p.vy*5);
+      ctx.strokeStyle=`rgba(${fR},${fG},${fB},${p.a})`; ctx.lineWidth=.8; ctx.stroke();
+      p.x+=p.vx*(spdV/5); p.y+=p.vy;
+      if(p.x>W+p.len){ p.x=-p.len; p.y=Math.random()*H; }
+    }
+  } else if(wx==='snow'){
+    ctx.fillStyle='rgba(0,0,0,.04)'; ctx.fillRect(0,0,W,H);
+    for(let p of parts){
+      p.wb+=p.wbs*(spdV/5); p.x+=Math.sin(p.wb)*.6+p.vx; p.y+=p.vy*(spdV/5);
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=`rgba(${fR},${fG},${fB},${p.a})`; ctx.fill();
+      if(p.y>H+10) p.y=-10; if(p.x>W+10) p.x=-10; if(p.x<-10) p.x=W+10;
+    }
+  } else if(wx==='fog'){
+    ctx.clearRect(0,0,W,H);
+    for(let p of parts){
+      const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+      g.addColorStop(0,`rgba(${fR},${fG},${fB},${p.a})`); g.addColorStop(1,`rgba(${fR},${fG},${fB},0)`);
+      ctx.fillStyle=g; ctx.fillRect(p.x-p.r,p.y-p.r,p.r*2,p.r*2);
+      p.x+=p.vx; if(p.x>W+p.r) p.x=-p.r; if(p.x<-p.r) p.x=W+p.r;
+    }
+  } else if(wx==='stars'){
+    ctx.fillStyle='rgba(0,0,0,.12)'; ctx.fillRect(0,0,W,H);
+    for(let p of parts){
+      p.tw+=p.tws*(spdV/5);
+      const a=p.ba*(.5+.5*Math.sin(p.tw));
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=`rgba(${fR},${fG},${fB},${a})`; ctx.fill();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+frame();
+
+// ── TILT ────────────────────────────────────────────────────
+const scene=document.getElementById('scene');
+let tX=0,tY=0,mX=0,mY=0,maxT=14;
+
+addEventListener('mousemove',e=>{ const cx=innerWidth/2,cy=innerHeight/2; mY=((e.clientX-cx)/cx)*maxT; mX=-((e.clientY-cy)/cy)*maxT; });
+addEventListener('mouseleave',()=>{ mX=0; mY=0; });
+// Touch support
+addEventListener('touchmove',e=>{ const t=e.touches[0]; const cx=innerWidth/2,cy=innerHeight/2; mY=((t.clientX-cx)/cx)*maxT*.5; mX=-((t.clientY-cy)/cy)*maxT*.5; },{passive:true});
+addEventListener('touchend',()=>{ mX=0; mY=0; });
+
+(function tilt(){ tX+=(mX-tX)*.1; tY+=(mY-tY)*.1; scene.style.transform=`rotateX(${tX.toFixed(2)}deg) rotateY(${tY.toFixed(2)}deg)`; requestAnimationFrame(tilt); })();
+
+// ── SETTINGS ────────────────────────────────────────────────
+document.getElementById('settings-btn').onclick=()=> document.getElementById('s-panel').classList.toggle('open');
+
+// Weather
+document.querySelectorAll('.wx-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.wx-btn').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); wx=b.dataset.wx;
+  ctx.clearRect(0,0,W,H); init();
+  const ov=document.getElementById('bg-overlay');
+  ov.style.background=wx==='fog'?'rgba(20,20,30,.38)':wx==='storm'?'rgba(5,5,15,.42)':'transparent';
+}));
+
+// Accent
+function setAccent(a,l){ const c=h2r(a); document.documentElement.style.setProperty('--accent',a); document.documentElement.style.setProperty('--accent-light',l||a); ['r','g','b'].forEach((k,i)=>document.documentElement.style.setProperty(`--accent-${k}`,Object.values(c)[i])); document.getElementById('card').style.borderColor=`rgba(${c.r},${c.g},${c.b},.25)`; document.getElementById('blob1').style.background=a; }
+document.querySelectorAll('[data-a]').forEach(d=>d.addEventListener('click',()=>{ document.querySelectorAll('[data-a]').forEach(x=>x.classList.remove('on')); d.classList.add('on'); setAccent(d.dataset.a,d.dataset.l); }));
+document.getElementById('ca-pick').addEventListener('input',e=>{ setAccent(e.target.value,e.target.value); document.querySelectorAll('[data-a]').forEach(x=>x.classList.remove('on')); });
+
+// Particle color
+document.querySelectorAll('[data-f]').forEach(d=>d.addEventListener('click',()=>{ document.querySelectorAll('[data-f]').forEach(x=>x.classList.remove('on')); d.classList.add('on'); const c=h2r(d.dataset.f); fR=c.r;fG=c.g;fB=c.b; }));
+document.getElementById('cf-pick').addEventListener('input',e=>{ const c=h2r(e.target.value); fR=c.r;fG=c.g;fB=c.b; document.querySelectorAll('[data-f]').forEach(x=>x.classList.remove('on')); });
+
+// Card bg
+document.querySelectorAll('[data-bg]').forEach(s=>s.addEventListener('click',()=>{ document.querySelectorAll('[data-bg]').forEach(x=>x.classList.remove('on')); s.classList.add('on'); document.getElementById('card').style.background=s.dataset.bg; document.documentElement.style.setProperty('--card-bg',s.dataset.bg); }));
+
+// Page bg
+document.querySelectorAll('[data-p]').forEach(s=>s.addEventListener('click',()=>{ document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); s.classList.add('on'); document.body.style.background=s.dataset.p; }));
+document.getElementById('cp-pick').addEventListener('input',e=>{ document.body.style.background=e.target.value; document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); });
+
+// Intensity / Speed
+document.getElementById('s-int').addEventListener('input',e=>{ intensV=+e.target.value; document.getElementById('v-int').textContent=intensV; init(); });
+document.getElementById('s-spd').addEventListener('input',e=>{ spdV=+e.target.value; document.getElementById('v-spd').textContent=spdV; });
+
+// Card size
+document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('[data-w]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); document.documentElement.style.setProperty('--card-w',`min(${b.dataset.w}px,94vw)`); }));
+
+// Tilt
+document.getElementById('s-tilt').addEventListener('input',e=>{ maxT=+e.target.value; document.getElementById('v-tilt').textContent=maxT; });
+
+// Uploads
+document.getElementById('up-banner').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; const img=document.getElementById('banner-img'); img.src=URL.createObjectURL(f); img.style.display='block'; document.getElementById('banner-ph').style.display='none'; });
+document.getElementById('up-avatar').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; const el=document.getElementById('avatar-img'); el.innerHTML=`<img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;">`; });
+
+// ── SOUNDCLOUD ───────────────────────────────────────────────
+const widget=SC.Widget(document.getElementById('sc-widget'));
+const statusEl=document.getElementById('status');
+const volRange=document.getElementById('vol-range');
+const volVal=document.getElementById('vol-val');
+function fmt(ms){ const s=~~(ms/1000); return ~~(s/60)+':'+String(s%60).padStart(2,'0'); }
+widget.bind(SC.Widget.Events.READY,()=>{ statusEl.textContent=''; widget.setVolume(80); widget.getCurrentSound(s=>{ if(!s)return; document.getElementById('title').textContent=s.title||''; document.getElementById('artist').textContent=s.user?.username||''; document.getElementById('cover').src=s.artwork_url?.replace('-large','-t300x300')||s.user?.avatar_url||''; }); });
+widget.bind(SC.Widget.Events.PLAY,()=>{ document.getElementById('ico-play').style.display='none'; document.getElementById('ico-pause').style.display=''; document.getElementById('cover').classList.add('playing'); widget.getCurrentSound(s=>{ if(!s)return; document.getElementById('title').textContent=s.title||''; document.getElementById('artist').textContent=s.user?.username||''; document.getElementById('cover').src=s.artwork_url?.replace('-large','-t300x300')||s.user?.avatar_url||''; }); });
+widget.bind(SC.Widget.Events.PAUSE,()=>{ document.getElementById('ico-play').style.display=''; document.getElementById('ico-pause').style.display='none'; document.getElementById('cover').classList.remove('playing'); });
+widget.bind(SC.Widget.Events.PLAY_PROGRESS,d=>{ document.getElementById('cur').textContent=fmt(d.currentPosition); widget.getDuration(dur=>{ if(dur>0){ document.getElementById('dur').textContent=fmt(dur); document.getElementById('pbar-fill').style.width=(d.currentPosition/dur*100)+'%'; } }); });
+widget.bind(SC.Widget.Events.FINISH,()=>widget.next());
+document.getElementById('btn-play').onclick=()=>widget.toggle();
+document.getElementById('btn-next').onclick=()=>widget.next();
+document.getElementById('btn-prev').onclick=()=>widget.prev();
+document.getElementById('pbar-bg').addEventListener('click',e=>{ const r=e.currentTarget.getBoundingClientRect(); widget.getDuration(dur=>widget.seekTo((e.clientX-r.left)/r.width*dur)); });
+volRange.addEventListener('input',()=>{ const v=+volRange.value; volVal.textContent=v; widget.setVolume(v); });
+</script>
+</body>
+</html>
