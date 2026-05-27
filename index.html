@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Плеер</title>
+<title>на подумать</title>
+<meta name="theme-color" content="#a050ff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Плеер">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23a050ff'/><path d='M35 28 L35 64' stroke='white' stroke-width='7' stroke-linecap='round'/><path d='M35 40 Q55 30 65 48 Q55 44 35 54' stroke='none' fill='white'/><circle cx='27' cy='67' r='9' fill='white'/><circle cx='57' cy='59' r='9' fill='white'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -374,6 +380,14 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
    <span class="vol-val" id="vol-val">80</span>
   </div>
 
+  <!-- INSTALL PWA -->
+  <div id="pwa-row" style="display:none;justify-content:center;margin-bottom:8px">
+   <button id="pwa-btn" style="display:flex;align-items:center;gap:7px;background:rgba(160,80,255,.1);border:1px solid rgba(160,80,255,.25);border-radius:20px;padding:6px 16px;color:rgba(200,170,255,.7);font-size:10px;font-family:Inter,sans-serif;cursor:pointer;transition:all .2s;letter-spacing:.04em">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    установить как приложение
+   </button>
+  </div>
+
   <!-- SETTINGS TOGGLE -->
   <div class="settings-row">
    <button class="settings-pill" id="settings-btn">
@@ -531,6 +545,20 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
    <div class="s-row">
     <span class="s-label">Сила</span>
     <div class="sl-row"><input type="range" id="s-tilt" min="0" max="28" value="14"><span class="sl-v" id="v-tilt">14</span></div>
+   </div>
+
+   <!-- PLAYLIST -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+    Свой плейлист
+   </div>
+   <div style="padding:0 0 12px">
+    <div style="font-size:10px;color:rgba(200,170,255,.4);margin-bottom:7px;line-height:1.5">Вставь ссылку на плейлист SoundCloud</div>
+    <div style="display:flex;gap:7px;align-items:center">
+     <input type="text" id="pl-input" placeholder="https://soundcloud.com/..." style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(160,80,255,.2);border-radius:8px;padding:7px 10px;color:#e0d0ff;font-size:11px;font-family:Inter,sans-serif;outline:none;">
+     <button id="pl-load" style="background:rgba(160,80,255,.18);border:1px solid rgba(160,80,255,.35);border-radius:8px;padding:7px 12px;color:#bf6fff;font-size:11px;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;transition:all .2s">Загрузить</button>
+    </div>
+    <div id="pl-msg" style="font-size:10px;color:rgba(160,80,255,.6);margin-top:6px;min-height:14px"></div>
    </div>
 
    <!-- UPLOADS -->
@@ -695,56 +723,173 @@ document.querySelectorAll('.wx-btn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.wx-btn').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); wx=b.dataset.wx;
   ctx.clearRect(0,0,W,H); init();
+  S.save('wx',wx);
   const ov=document.getElementById('bg-overlay');
   ov.style.background=wx==='fog'?'rgba(20,20,30,.38)':wx==='storm'?'rgba(5,5,15,.42)':'transparent';
 }));
 
 // Accent
+// ── SAVE / LOAD SETTINGS ─────────────────────────────────────
+const S = {
+  save(key, val){ try{ localStorage.setItem('pl_'+key, JSON.stringify(val)); }catch(e){} },
+  load(key, def){ try{ const v=localStorage.getItem('pl_'+key); return v!==null?JSON.parse(v):def; }catch(e){ return def; } }
+};
+
+function applySettings(){
+  const acc = S.load('accent','#a050ff');
+  const acl = S.load('accent_l','#bf6fff');
+  setAccent(acc, acl);
+  const fall = S.load('fall','#a050ff');
+  const fc = h2r(fall); fR=fc.r; fG=fc.g; fB=fc.b;
+  const cbg = S.load('card_bg','rgba(14,10,22,0.93)');
+  document.getElementById('card').style.background = cbg;
+  document.documentElement.style.setProperty('--card-bg', cbg);
+  const pbg = S.load('page_bg','#000');
+  document.body.style.background = pbg;
+  wx = S.load('wx','digits');
+  intensV = S.load('int',5); document.getElementById('s-int').value=intensV; document.getElementById('v-int').textContent=intensV;
+  spdV = S.load('spd',5); document.getElementById('s-spd').value=spdV; document.getElementById('v-spd').textContent=spdV;
+  const cw = S.load('card_w','430');
+  document.documentElement.style.setProperty('--card-w',`min(${cw}px,94vw)`);
+  maxT = S.load('tilt',14); document.getElementById('s-tilt').value=maxT; document.getElementById('v-tilt').textContent=maxT;
+  // Mark active wx button
+  document.querySelectorAll('.wx-btn').forEach(b=>{ b.classList.toggle('on', b.dataset.wx===wx); });
+  // overlay
+  const ov=document.getElementById('bg-overlay');
+  ov.style.background=wx==='fog'?'rgba(20,20,30,.38)':wx==='storm'?'rgba(5,5,15,.42)':'transparent';
+  init();
+}
+applySettings();
+
 function setAccent(a,l){ const c=h2r(a); document.documentElement.style.setProperty('--accent',a); document.documentElement.style.setProperty('--accent-light',l||a); ['r','g','b'].forEach((k,i)=>document.documentElement.style.setProperty(`--accent-${k}`,Object.values(c)[i])); document.getElementById('card').style.borderColor=`rgba(${c.r},${c.g},${c.b},.25)`; document.getElementById('blob1').style.background=a; }
-document.querySelectorAll('[data-a]').forEach(d=>d.addEventListener('click',()=>{ document.querySelectorAll('[data-a]').forEach(x=>x.classList.remove('on')); d.classList.add('on'); setAccent(d.dataset.a,d.dataset.l); }));
-document.getElementById('ca-pick').addEventListener('input',e=>{ setAccent(e.target.value,e.target.value); document.querySelectorAll('[data-a]').forEach(x=>x.classList.remove('on')); });
+document.querySelectorAll('[data-a]').forEach(d=>d.addEventListener('click',()=>{ document.querySelectorAll('[data-a]').forEach(x=>x.classList.remove('on')); d.classList.add('on'); setAccent(d.dataset.a,d.dataset.l); S.save('accent',d.dataset.a); S.save('accent_l',d.dataset.l); }));
+document.getElementById('ca-pick').addEventListener('input',e=>{ setAccent(e.target.value,e.target.value); S.save('accent',e.target.value); S.save('accent_l',e.target.value); document.querySelectorAll('[data-a]').forEach(x=>x.classList.remove('on')); });
 
 // Particle color
-document.querySelectorAll('[data-f]').forEach(d=>d.addEventListener('click',()=>{ document.querySelectorAll('[data-f]').forEach(x=>x.classList.remove('on')); d.classList.add('on'); const c=h2r(d.dataset.f); fR=c.r;fG=c.g;fB=c.b; }));
-document.getElementById('cf-pick').addEventListener('input',e=>{ const c=h2r(e.target.value); fR=c.r;fG=c.g;fB=c.b; document.querySelectorAll('[data-f]').forEach(x=>x.classList.remove('on')); });
+document.querySelectorAll('[data-f]').forEach(d=>d.addEventListener('click',()=>{ document.querySelectorAll('[data-f]').forEach(x=>x.classList.remove('on')); d.classList.add('on'); const c=h2r(d.dataset.f); fR=c.r;fG=c.g;fB=c.b; S.save('fall',d.dataset.f); }));
+document.getElementById('cf-pick').addEventListener('input',e=>{ const c=h2r(e.target.value); fR=c.r;fG=c.g;fB=c.b; S.save('fall',e.target.value); document.querySelectorAll('[data-f]').forEach(x=>x.classList.remove('on')); });
 
 // Card bg
-document.querySelectorAll('[data-bg]').forEach(s=>s.addEventListener('click',()=>{ document.querySelectorAll('[data-bg]').forEach(x=>x.classList.remove('on')); s.classList.add('on'); document.getElementById('card').style.background=s.dataset.bg; document.documentElement.style.setProperty('--card-bg',s.dataset.bg); }));
+document.querySelectorAll('[data-bg]').forEach(s=>s.addEventListener('click',()=>{ document.querySelectorAll('[data-bg]').forEach(x=>x.classList.remove('on')); s.classList.add('on'); document.getElementById('card').style.background=s.dataset.bg; document.documentElement.style.setProperty('--card-bg',s.dataset.bg); S.save('card_bg',s.dataset.bg); }));
 
 // Page bg
-document.querySelectorAll('[data-p]').forEach(s=>s.addEventListener('click',()=>{ document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); s.classList.add('on'); document.body.style.background=s.dataset.p; }));
-document.getElementById('cp-pick').addEventListener('input',e=>{ document.body.style.background=e.target.value; document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); });
+document.querySelectorAll('[data-p]').forEach(s=>s.addEventListener('click',()=>{ document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); s.classList.add('on'); document.body.style.background=s.dataset.p; S.save('page_bg',s.dataset.p); }));
+document.getElementById('cp-pick').addEventListener('input',e=>{ document.body.style.background=e.target.value; S.save('page_bg',e.target.value); document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); });
 
 // Intensity / Speed
-document.getElementById('s-int').addEventListener('input',e=>{ intensV=+e.target.value; document.getElementById('v-int').textContent=intensV; init(); });
-document.getElementById('s-spd').addEventListener('input',e=>{ spdV=+e.target.value; document.getElementById('v-spd').textContent=spdV; });
+document.getElementById('s-int').addEventListener('input',e=>{ intensV=+e.target.value; document.getElementById('v-int').textContent=intensV; S.save('int',intensV); init(); });
+document.getElementById('s-spd').addEventListener('input',e=>{ spdV=+e.target.value; document.getElementById('v-spd').textContent=spdV; S.save('spd',spdV); });
 
 // Card size
-document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('[data-w]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); document.documentElement.style.setProperty('--card-w',`min(${b.dataset.w}px,94vw)`); }));
+document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('[data-w]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); document.documentElement.style.setProperty('--card-w',`min(${b.dataset.w}px,94vw)`); S.save('card_w',b.dataset.w); }));
 
 // Tilt
-document.getElementById('s-tilt').addEventListener('input',e=>{ maxT=+e.target.value; document.getElementById('v-tilt').textContent=maxT; });
+document.getElementById('s-tilt').addEventListener('input',e=>{ maxT=+e.target.value; document.getElementById('v-tilt').textContent=maxT; S.save('tilt',maxT); });
 
 // Uploads
 document.getElementById('up-banner').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; const img=document.getElementById('banner-img'); img.src=URL.createObjectURL(f); img.style.display='block'; document.getElementById('banner-ph').style.display='none'; });
 document.getElementById('up-avatar').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; const el=document.getElementById('avatar-img'); el.innerHTML=`<img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;">`; });
 
 // ── SOUNDCLOUD ───────────────────────────────────────────────
-const widget=SC.Widget(document.getElementById('sc-widget'));
 const statusEl=document.getElementById('status');
 const volRange=document.getElementById('vol-range');
 const volVal=document.getElementById('vol-val');
 function fmt(ms){ const s=~~(ms/1000); return ~~(s/60)+':'+String(s%60).padStart(2,'0'); }
-widget.bind(SC.Widget.Events.READY,()=>{ statusEl.textContent=''; widget.setVolume(80); widget.getCurrentSound(s=>{ if(!s)return; document.getElementById('title').textContent=s.title||''; document.getElementById('artist').textContent=s.user?.username||''; document.getElementById('cover').src=s.artwork_url?.replace('-large','-t300x300')||s.user?.avatar_url||''; }); });
-widget.bind(SC.Widget.Events.PLAY,()=>{ document.getElementById('ico-play').style.display='none'; document.getElementById('ico-pause').style.display=''; document.getElementById('cover').classList.add('playing'); widget.getCurrentSound(s=>{ if(!s)return; document.getElementById('title').textContent=s.title||''; document.getElementById('artist').textContent=s.user?.username||''; document.getElementById('cover').src=s.artwork_url?.replace('-large','-t300x300')||s.user?.avatar_url||''; }); });
-widget.bind(SC.Widget.Events.PAUSE,()=>{ document.getElementById('ico-play').style.display=''; document.getElementById('ico-pause').style.display='none'; document.getElementById('cover').classList.remove('playing'); });
-widget.bind(SC.Widget.Events.PLAY_PROGRESS,d=>{ document.getElementById('cur').textContent=fmt(d.currentPosition); widget.getDuration(dur=>{ if(dur>0){ document.getElementById('dur').textContent=fmt(dur); document.getElementById('pbar-fill').style.width=(d.currentPosition/dur*100)+'%'; } }); });
-widget.bind(SC.Widget.Events.FINISH,()=>widget.next());
-document.getElementById('btn-play').onclick=()=>widget.toggle();
-document.getElementById('btn-next').onclick=()=>widget.next();
-document.getElementById('btn-prev').onclick=()=>widget.prev();
-document.getElementById('pbar-bg').addEventListener('click',e=>{ const r=e.currentTarget.getBoundingClientRect(); widget.getDuration(dur=>widget.seekTo((e.clientX-r.left)/r.width*dur)); });
-volRange.addEventListener('input',()=>{ const v=+volRange.value; volVal.textContent=v; widget.setVolume(v); });
+
+let widget = null;
+const DEFAULT_PL = 'https://soundcloud.com/1707213/sets/na-podumat';
+
+function updateTrackInfo(w){
+  w.getCurrentSound(s=>{
+    if(!s) return;
+    document.getElementById('title').textContent = s.title||'';
+    document.getElementById('artist').textContent = s.user?.username||'';
+    document.getElementById('cover').src = s.artwork_url?.replace('-large','-t300x300')||s.user?.avatar_url||'';
+  });
+}
+
+function bindWidget(w){
+  w.bind(SC.Widget.Events.READY,()=>{
+    statusEl.textContent='';
+    w.setVolume(+volRange.value||80);
+    updateTrackInfo(w);
+  });
+  w.bind(SC.Widget.Events.PLAY,()=>{
+    document.getElementById('ico-play').style.display='none';
+    document.getElementById('ico-pause').style.display='';
+    document.getElementById('cover').classList.add('playing');
+    updateTrackInfo(w);
+  });
+  w.bind(SC.Widget.Events.PAUSE,()=>{
+    document.getElementById('ico-play').style.display='';
+    document.getElementById('ico-pause').style.display='none';
+    document.getElementById('cover').classList.remove('playing');
+  });
+  w.bind(SC.Widget.Events.PLAY_PROGRESS,d=>{
+    document.getElementById('cur').textContent=fmt(d.currentPosition);
+    w.getDuration(dur=>{ if(dur>0){ document.getElementById('dur').textContent=fmt(dur); document.getElementById('pbar-fill').style.width=(d.currentPosition/dur*100)+'%'; } });
+  });
+  w.bind(SC.Widget.Events.FINISH,()=>w.next());
+}
+
+function loadPlaylist(url, onDone){
+  const iframe = document.getElementById('sc-widget');
+  const src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
+  iframe.src = src;
+  iframe.onload = ()=>{
+    widget = SC.Widget(iframe);
+    bindWidget(widget);
+    if(onDone) setTimeout(onDone, 800);
+  };
+}
+
+// Init with saved or default playlist
+const savedPl = localStorage.getItem('pl_url') || DEFAULT_PL;
+loadPlaylist(savedPl);
+if(savedPl !== DEFAULT_PL) document.getElementById('pl-input').value = savedPl;
+
+document.getElementById('btn-play').onclick=()=>widget&&widget.toggle();
+document.getElementById('btn-next').onclick=()=>widget&&widget.next();
+document.getElementById('btn-prev').onclick=()=>widget&&widget.prev();
+document.getElementById('pbar-bg').addEventListener('click',e=>{
+  if(!widget) return;
+  const r=e.currentTarget.getBoundingClientRect();
+  widget.getDuration(dur=>widget.seekTo((e.clientX-r.left)/r.width*dur));
+});
+volRange.addEventListener('input',()=>{ const v=+volRange.value; volVal.textContent=v; if(widget) widget.setVolume(v); });
+
+// ── PLAYLIST LOADER ──────────────────────────────────────────
+document.getElementById('pl-load').addEventListener('click',()=>{
+  const url = document.getElementById('pl-input').value.trim();
+  const msg = document.getElementById('pl-msg');
+  if(!url){ msg.textContent='Вставь ссылку!'; msg.style.color='rgba(255,100,100,.7)'; return; }
+  if(!url.includes('soundcloud.com')){ msg.textContent='Это не ссылка SoundCloud'; msg.style.color='rgba(255,100,100,.7)'; return; }
+  msg.textContent='Загружаю...'; msg.style.color='rgba(160,80,255,.7)';
+  loadPlaylist(url, ()=>{
+    localStorage.setItem('pl_url', url);
+    msg.textContent='Плейлист сохранён!'; msg.style.color='rgba(100,220,130,.8)';
+    setTimeout(()=>msg.textContent='', 3000);
+  });
+});
+document.getElementById('pl-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('pl-load').click(); });
+document.getElementById('pl-input').addEventListener('focus',e=>e.target.style.borderColor='rgba(160,80,255,.55)');
+document.getElementById('pl-input').addEventListener('blur',e=>e.target.style.borderColor='rgba(160,80,255,.2)');
+
+// ── PWA INSTALL ──────────────────────────────────────────────
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('pwa-row').style.display = 'flex';
+});
+document.getElementById('pwa-btn').addEventListener('click', async () => {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if(outcome === 'accepted') document.getElementById('pwa-row').style.display = 'none';
+  deferredPrompt = null;
+});
+window.addEventListener('appinstalled', () => { document.getElementById('pwa-row').style.display = 'none'; });
 </script>
 </body>
 </html>
+
