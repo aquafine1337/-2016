@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>на подумать</title>
+<title>#aquafine</title>
 <meta name="theme-color" content="#a050ff">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -302,9 +302,131 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
   .wx-btn { font-size:8px; padding:6px 2px 5px; border-radius:8px; }
   .settings-panel { max-height:50vh; }
 }
+
+/* ── INTRO SCREEN ── */
+#intro {
+  position:fixed; inset:0; z-index:1000;
+  background:#000;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:0;
+  transition: opacity .8s ease;
+}
+#intro.hide { opacity:0; pointer-events:none; }
+
+#intro canvas {
+  position:absolute; inset:0; width:100%; height:100%;
+}
+
+.intro-content {
+  position:relative; z-index:2;
+  display:flex; flex-direction:column;
+  align-items:center; gap:clamp(18px,4vw,32px);
+}
+
+.skulls-row {
+  display:flex; gap:clamp(20px,6vw,50px);
+  align-items:flex-end;
+}
+
+.skull-svg {
+  filter: drop-shadow(0 0 18px rgba(255,255,255,.5));
+  animation: skullFloat 3s ease-in-out infinite;
+}
+.skull-svg:nth-child(2) { animation-delay:-.8s; transform:scale(.75); }
+
+@keyframes skullFloat {
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-10px); }
+}
+.skull-svg:nth-child(2) {
+  animation-name: skullFloat2;
+}
+@keyframes skullFloat2 {
+  0%,100%{ transform:translateY(0) scale(.75); }
+  50%{ transform:translateY(-10px) scale(.75); }
+}
+
+.intro-tag {
+  font-family:'Unbounded',sans-serif;
+  font-size: clamp(22px,6vw,42px);
+  font-weight:600; color:#fff;
+  letter-spacing:.08em;
+  text-shadow: 0 0 30px rgba(255,255,255,.4), 0 0 60px rgba(160,80,255,.3);
+  animation: glitchText 4s infinite;
+}
+
+@keyframes glitchText {
+  0%,90%,100%{ clip-path:none; transform:none; }
+  91%{ clip-path:inset(20% 0 60% 0); transform:translateX(-4px); }
+  92%{ clip-path:inset(60% 0 10% 0); transform:translateX(4px); }
+  93%{ clip-path:none; transform:none; }
+  96%{ clip-path:inset(40% 0 40% 0); transform:translateX(-2px); }
+  97%{ clip-path:none; }
+}
+
+.intro-sub {
+  font-family:'Inter',sans-serif;
+  font-size: clamp(10px,2.5vw,13px);
+  color:rgba(255,255,255,.3);
+  letter-spacing:.2em;
+  text-transform:uppercase;
+}
+
+.enter-btn {
+  background:none;
+  border:none;
+  cursor:pointer;
+  margin-top:clamp(8px,2vw,16px);
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  transition:transform .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.enter-btn:hover { transform:scale(1.08); }
+.enter-btn:hover .enter-skull { filter:drop-shadow(0 0 28px rgba(160,80,255,.9)); }
+
+.enter-skull {
+  filter:drop-shadow(0 0 14px rgba(160,80,255,.6));
+  transition:filter .3s;
+  animation:enterPulse 2s ease-in-out infinite;
+}
+@keyframes enterPulse {
+  0%,100%{ filter:drop-shadow(0 0 10px rgba(160,80,255,.5)); }
+  50%{ filter:drop-shadow(0 0 26px rgba(160,80,255,.9)); }
+}
+
+.enter-label {
+  font-family:'Inter',sans-serif;
+  font-size:11px; color:rgba(200,170,255,.6);
+  letter-spacing:.18em; text-transform:uppercase;
+}
+
+/* glitch scan lines on intro */
+#intro::after {
+  content:''; position:absolute; inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
+  pointer-events:none; z-index:1;
+}
 </style>
 </head>
 <body>
+
+<!-- INTRO SCREEN -->
+<div id="intro">
+ <canvas id="intro-bg"></canvas>
+ <div class="intro-content">
+  <div class="intro-tag">#aquafine</div>
+  <div class="intro-sub">нажми чтобы войти</div>
+
+  <button class="enter-btn" id="enter-btn">
+   <svg class="enter-skull" width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="30" cy="30" r="28" fill="rgba(160,80,255,0.15)" stroke="rgba(160,80,255,0.6)" stroke-width="1.5"/>
+    <polygon points="22,16 22,44 46,30" fill="#a050ff"/>
+   </svg>
+   <span class="enter-label">войти</span>
+  </button>
+ </div>
+</div>
 
 <canvas id="bg"></canvas>
 <div id="bg-overlay"></div>
@@ -341,7 +463,7 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
    </div>
   </div>
 
-  <div class="username">на подумать</div>
+  <div class="username">#aquafine</div>
 
   <!-- COVER -->
   <div class="cover-area">
@@ -433,6 +555,10 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
     <button class="wx-btn" data-wx="fog">
      <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h18M3 12h18M3 16h18" opacity=".6"/><ellipse cx="12" cy="8" rx="8" ry="3" opacity=".3"/></svg>
      туман
+    </button>
+    <button class="wx-btn" data-wx="skulls">
+     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+     ноты
     </button>
     <button class="wx-btn" data-wx="stars">
      <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -786,9 +912,35 @@ document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>
 // Tilt
 document.getElementById('s-tilt').addEventListener('input',e=>{ maxT=+e.target.value; document.getElementById('v-tilt').textContent=maxT; S.save('tilt',maxT); });
 
-// Uploads
-document.getElementById('up-banner').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; const img=document.getElementById('banner-img'); img.src=URL.createObjectURL(f); img.style.display='block'; document.getElementById('banner-ph').style.display='none'; });
-document.getElementById('up-avatar').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; const el=document.getElementById('avatar-img'); el.innerHTML=`<img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;">`; });
+// Uploads with base64 save
+function fileToBase64(file, cb){ const r=new FileReader(); r.onload=e=>cb(e.target.result); r.readAsDataURL(file); }
+
+document.getElementById('up-banner').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return;
+  fileToBase64(f, b64=>{
+    const img=document.getElementById('banner-img');
+    img.src=b64; img.style.display='block';
+    document.getElementById('banner-ph').style.display='none';
+    try{ localStorage.setItem('pl_banner',b64); }catch(e){}
+  });
+});
+
+document.getElementById('up-avatar').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return;
+  fileToBase64(f, b64=>{
+    const el=document.getElementById('avatar-img');
+    el.innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;">`;
+    try{ localStorage.setItem('pl_avatar',b64); }catch(e){}
+  });
+});
+
+// Restore saved banner/avatar
+(()=>{
+  const b=localStorage.getItem('pl_banner');
+  if(b){ const img=document.getElementById('banner-img'); img.src=b; img.style.display='block'; document.getElementById('banner-ph').style.display='none'; }
+  const a=localStorage.getItem('pl_avatar');
+  if(a){ document.getElementById('avatar-img').innerHTML=`<img src="${a}" style="width:100%;height:100%;object-fit:cover;">`; }
+})();
 
 // ── SOUNDCLOUD ───────────────────────────────────────────────
 const statusEl=document.getElementById('status');
@@ -874,6 +1026,93 @@ document.getElementById('pl-load').addEventListener('click',()=>{
 document.getElementById('pl-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('pl-load').click(); });
 document.getElementById('pl-input').addEventListener('focus',e=>e.target.style.borderColor='rgba(160,80,255,.55)');
 document.getElementById('pl-input').addEventListener('blur',e=>e.target.style.borderColor='rgba(160,80,255,.2)');
+
+// ── MUSIC NOTES RAIN ─────────────────────────────────────────
+function makeSkullRain(){
+  parts=[];
+  const n=~~(60*(intensV/5));
+  for(let i=0;i<n;i++) parts.push({
+    x:Math.random()*W, y:Math.random()*H,
+    vy:(Math.random()*2+1)*(spdV/5),
+    vx:(Math.random()-.5)*.5,
+    size:Math.random()*20+10,
+    rot:Math.random()*Math.PI*2,
+    rotV:(Math.random()-.5)*.04,
+    a:Math.random()*.6+.2,
+    type:~~(Math.random()*3)
+  });
+}
+
+function drawSkulls(){
+  ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,W,H);
+  for(let p of parts){
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.rotate(p.rot);
+    ctx.globalAlpha=p.a;
+    ctx.fillStyle=`rgb(${fR},${fG},${fB})`;
+    ctx.strokeStyle=`rgb(${fR},${fG},${fB})`;
+    const s=p.size/24;
+    ctx.scale(s,s);
+    if(p.type===0){
+      // Quarter note ♩
+      ctx.beginPath(); ctx.ellipse(0,0,9,7,Math.PI*0.2,0,Math.PI*2); ctx.fill();
+      ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(8,-3); ctx.lineTo(8,-28); ctx.stroke();
+    } else if(p.type===1){
+      // Eighth note ♪
+      ctx.beginPath(); ctx.ellipse(0,0,9,7,Math.PI*0.2,0,Math.PI*2); ctx.fill();
+      ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(8,-3); ctx.lineTo(8,-28); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(8,-28); ctx.quadraticCurveTo(22,-22,18,-14); ctx.stroke();
+    } else {
+      // Double note ♫
+      ctx.beginPath(); ctx.ellipse(-10,0,7,5,Math.PI*0.2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(8,-4,7,5,Math.PI*0.2,0,Math.PI*2); ctx.fill();
+      ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.moveTo(-4,-3); ctx.lineTo(-4,-22); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(14,-7); ctx.lineTo(14,-26); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-4,-22); ctx.lineTo(14,-26); ctx.stroke();
+    }
+    ctx.globalAlpha=1; ctx.restore();
+    p.x+=p.vx; p.y+=p.vy*(spdV/5); p.rot+=p.rotV;
+    if(p.y>H+40){ p.y=-40; p.x=Math.random()*W; }
+  }
+}
+
+// ── INTRO SCREEN ─────────────────────────────────────────────
+const introBg = document.getElementById('intro-bg');
+const ictx = introBg.getContext('2d');
+let iW, iH, iDots=[];
+
+function introResize(){ iW=introBg.width=innerWidth; iH=introBg.height=innerHeight; initIntroDots(); }
+introResize(); addEventListener('resize', introResize);
+
+function initIntroDots(){
+  iDots=[];
+  const sp=36, cols=~~(iW/sp), rows=~~(iH/sp);
+  for(let i=0;i<=cols;i++) for(let j=0;j<=rows;j++)
+    iDots.push({x:i*sp,y:j*sp,ox:i*sp,oy:j*sp,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*.9+.3,a:Math.random()*.25+.05});
+}
+
+function animIntro(){
+  if(!document.getElementById('intro').classList.contains('hide')){
+    ictx.clearRect(0,0,iW,iH);
+    for(let d of iDots){
+      d.x+=d.vx; d.y+=d.vy;
+      if(Math.abs(d.x-d.ox)>14) d.vx*=-1;
+      if(Math.abs(d.y-d.oy)>14) d.vy*=-1;
+      ictx.beginPath(); ictx.arc(d.x,d.y,d.r,0,Math.PI*2);
+      ictx.fillStyle=`rgba(160,80,255,${d.a})`; ictx.fill();
+    }
+    requestAnimationFrame(animIntro);
+  }
+}
+animIntro();
+
+document.getElementById('enter-btn').addEventListener('click',()=>{
+  const intro = document.getElementById('intro');
+  intro.classList.add('hide');
+  setTimeout(()=>intro.style.display='none', 900);
+});
 
 // ── PWA INSTALL ──────────────────────────────────────────────
 let deferredPrompt;
