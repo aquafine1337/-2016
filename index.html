@@ -678,13 +678,34 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
     Свой плейлист
    </div>
-   <div style="padding:0 0 12px">
-    <div style="font-size:10px;color:rgba(200,170,255,.4);margin-bottom:7px;line-height:1.5">Вставь ссылку на плейлист SoundCloud</div>
+   <!-- Source tabs -->
+   <div style="display:flex;gap:6px;margin-bottom:10px">
+    <button class="src-tab on" id="tab-sc" data-src="sc" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:rgba(160,80,255,.2);border:1px solid rgba(160,80,255,.45);border-radius:8px;padding:6px 0;color:#bf6fff;font-size:10px;font-family:Inter,sans-serif;cursor:pointer;transition:all .2s;letter-spacing:.04em">
+     <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+     SoundCloud
+    </button>
+    <button class="src-tab" id="tab-sp" data-src="sp" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 0;color:rgba(200,170,255,.45);font-size:10px;font-family:Inter,sans-serif;cursor:pointer;transition:all .2s;letter-spacing:.04em">
+     <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+     Spotify
+    </button>
+   </div>
+   <!-- SC inputs -->
+   <div id="sc-pl-wrap" style="padding:0 0 12px">
+    <div style="font-size:10px;color:rgba(200,170,255,.4);margin-bottom:7px;line-height:1.5">Вставь ссылку — плейлист загрузится сразу</div>
     <div style="display:flex;gap:7px;align-items:center">
-     <input type="text" id="pl-input" placeholder="https://soundcloud.com/..." style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(160,80,255,.2);border-radius:8px;padding:7px 10px;color:#e0d0ff;font-size:11px;font-family:Inter,sans-serif;outline:none;">
-     <button id="pl-load" style="background:rgba(160,80,255,.18);border:1px solid rgba(160,80,255,.35);border-radius:8px;padding:7px 12px;color:#bf6fff;font-size:11px;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;transition:all .2s">Загрузить</button>
+     <input type="text" id="pl-input" placeholder="https://soundcloud.com/..." style="flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(160,80,255,.2);border-radius:8px;padding:8px 10px;color:#e0d0ff;font-size:11px;font-family:Inter,sans-serif;outline:none;">
+     <button id="pl-load" style="background:rgba(160,80,255,.18);border:1px solid rgba(160,80,255,.35);border-radius:8px;padding:8px 12px;color:#bf6fff;font-size:11px;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0">Загрузить</button>
     </div>
     <div id="pl-msg" style="font-size:10px;color:rgba(160,80,255,.6);margin-top:6px;min-height:14px"></div>
+   </div>
+   <!-- Spotify inputs -->
+   <div id="sp-pl-wrap" style="padding:0 0 12px;display:none">
+    <div style="font-size:10px;color:rgba(200,170,255,.4);margin-bottom:7px;line-height:1.5">Вставь ссылку на плейлист Spotify</div>
+    <div style="display:flex;gap:7px;align-items:center">
+     <input type="text" id="sp-input" placeholder="https://open.spotify.com/playlist/..." style="flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(30,215,96,.2);border-radius:8px;padding:8px 10px;color:#e0d0ff;font-size:11px;font-family:Inter,sans-serif;outline:none;">
+     <button id="sp-load" style="background:rgba(30,215,96,.12);border:1px solid rgba(30,215,96,.3);border-radius:8px;padding:8px 12px;color:#1ed760;font-size:11px;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0">Загрузить</button>
+    </div>
+    <div id="sp-msg" style="font-size:10px;color:rgba(30,215,96,.5);margin-top:6px;min-height:14px"></div>
    </div>
 
    <!-- UPLOADS -->
@@ -709,6 +730,11 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
 
   </div><!-- /s-panel -->
 
+  <!-- SPOTIFY EMBED AREA -->
+  <div id="sp-embed-area" style="display:none;padding:0 clamp(14px,3.5vw,20px) 10px">
+   <div id="sp-embed-target" style="border-radius:12px;overflow:hidden;min-height:80px"></div>
+  </div>
+
   <div class="loading" id="status">Подключение...</div>
  </div><!-- /card -->
 </div><!-- /scene -->
@@ -720,6 +746,7 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
  style="display:none">
 </iframe>
 <script src="https://w.soundcloud.com/player/api.js"></script>
+<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
 
 <script>
 // ── CANVAS ──────────────────────────────────────────────────
@@ -752,6 +779,8 @@ function init(){
   } else if(wx==='stars'){
     const n=~~(300*(intensV/5));
     for(let i=0;i<n;i++) parts.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.3,tw:Math.random()*Math.PI*2,tws:Math.random()*.03+.005,ba:Math.random()*.6+.2});
+  } else if(wx==='skulls'){
+    makeSkullRain();
   }
 }
 
@@ -824,6 +853,8 @@ function frame(){
       const a=p.ba*(.5+.5*Math.sin(p.tw));
       ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=`rgba(${fR},${fG},${fB},${a})`; ctx.fill();
     }
+  } else if(wx==='skulls'){
+    drawSkulls();
   }
   requestAnimationFrame(frame);
 }
@@ -1000,14 +1031,10 @@ const savedPl = localStorage.getItem('pl_url') || DEFAULT_PL;
 loadPlaylist(savedPl);
 if(savedPl !== DEFAULT_PL) document.getElementById('pl-input').value = savedPl;
 
-document.getElementById('btn-play').onclick=()=>widget&&widget.toggle();
-document.getElementById('btn-next').onclick=()=>widget&&widget.next();
-document.getElementById('btn-prev').onclick=()=>widget&&widget.prev();
-document.getElementById('pbar-bg').addEventListener('click',e=>{
-  if(!widget) return;
-  const r=e.currentTarget.getBoundingClientRect();
-  widget.getDuration(dur=>widget.seekTo((e.clientX-r.left)/r.width*dur));
-});
+// SC controls handled via unified handlers below
+// document.getElementById('btn-play').onclick handled by source switcher
+// document.getElementById('btn-next').onclick handled by source switcher
+// document.getElementById('btn-prev').onclick handled by source switcher
 volRange.addEventListener('input',()=>{ const v=+volRange.value; volVal.textContent=v; if(widget) widget.setVolume(v); });
 
 // ── PLAYLIST LOADER ──────────────────────────────────────────
@@ -1024,6 +1051,12 @@ document.getElementById('pl-load').addEventListener('click',()=>{
   });
 });
 document.getElementById('pl-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('pl-load').click(); });
+document.getElementById('pl-input').addEventListener('paste',e=>{
+  setTimeout(()=>{
+    const v=document.getElementById('pl-input').value.trim();
+    if(v.includes('soundcloud.com')) document.getElementById('pl-load').click();
+  },80);
+});
 document.getElementById('pl-input').addEventListener('focus',e=>e.target.style.borderColor='rgba(160,80,255,.55)');
 document.getElementById('pl-input').addEventListener('blur',e=>e.target.style.borderColor='rgba(160,80,255,.2)');
 
@@ -1114,6 +1147,128 @@ document.getElementById('enter-btn').addEventListener('click',()=>{
   setTimeout(()=>intro.style.display='none', 900);
 });
 
+// ── SPOTIFY ──────────────────────────────────────────────────
+let spotifyReady = false, spotifyAPI = null, spotifyController = null;
+let activeSource = localStorage.getItem('pl_source') || 'sc'; // 'sc' | 'sp'
+
+window.onSpotifyIframeApiReady = (IFrameAPI) => {
+  spotifyAPI = IFrameAPI;
+  spotifyReady = true;
+  const saved = localStorage.getItem('sp_url');
+  if(saved && activeSource === 'sp') loadSpotify(saved);
+};
+
+function parseSpotifyId(url){
+  // https://open.spotify.com/playlist/ID or spotify:playlist:ID
+  const m = url.match(/playlist[\/:]([a-zA-Z0-9]+)/);
+  return m ? m[1] : null;
+}
+
+function loadSpotify(url){
+  const id = parseSpotifyId(url);
+  const msg = document.getElementById('sp-msg');
+  if(!id){ msg.textContent='Не могу найти ID плейлиста'; msg.style.color='rgba(255,100,100,.7)'; return; }
+  if(!spotifyReady || !spotifyAPI){ msg.textContent='API ещё грузится, подожди...'; msg.style.color='rgba(30,215,96,.5)'; setTimeout(()=>loadSpotify(url),800); return; }
+  msg.textContent='Загружаю...'; msg.style.color='rgba(30,215,96,.5)';
+  const uri = `spotify:playlist:${id}`;
+  const target = document.getElementById('sp-embed-target');
+  target.innerHTML = '';
+  const options = { uri, width: '100%', height: '80', theme: '0' };
+  spotifyAPI.createController(target, options, (ctrl) => {
+    spotifyController = ctrl;
+    ctrl.addListener('playback_update', e => {
+      const d = e.data;
+      const dur = d.duration || 0;
+      const pos = d.position || 0;
+      if(dur > 0){
+        document.getElementById('cur').textContent = fmt(pos);
+        document.getElementById('dur').textContent = fmt(dur);
+        document.getElementById('pbar-fill').style.width = (pos/dur*100)+'%';
+      }
+      const isPaused = d.isPaused;
+      document.getElementById('ico-play').style.display = isPaused ? '' : 'none';
+      document.getElementById('ico-pause').style.display = isPaused ? 'none' : '';
+      document.getElementById('cover').classList.toggle('playing', !isPaused);
+    });
+    ctrl.addListener('ready', () => {
+      document.getElementById('status').textContent = '';
+      msg.textContent = 'Плейлист загружен!'; msg.style.color='rgba(100,220,130,.8)';
+      setTimeout(()=>msg.textContent='', 3000);
+      localStorage.setItem('sp_url', url);
+      document.getElementById('title').textContent = 'Spotify плейлист';
+      document.getElementById('artist').textContent = '';
+    });
+  });
+}
+
+// Source tab switching
+function setSource(src){
+  activeSource = src;
+  localStorage.setItem('pl_source', src);
+  const isSC = src === 'sc';
+  document.getElementById('sc-pl-wrap').style.display = isSC ? '' : 'none';
+  document.getElementById('sp-pl-wrap').style.display = isSC ? 'none' : '';
+  document.getElementById('sp-embed-area').style.display = isSC ? 'none' : '';
+  document.getElementById('tab-sc').style.background = isSC ? 'rgba(160,80,255,.2)' : 'rgba(255,255,255,.04)';
+  document.getElementById('tab-sc').style.borderColor = isSC ? 'rgba(160,80,255,.45)' : 'rgba(255,255,255,.1)';
+  document.getElementById('tab-sc').style.color = isSC ? '#bf6fff' : 'rgba(200,170,255,.45)';
+  document.getElementById('tab-sp').style.background = !isSC ? 'rgba(30,215,96,.12)' : 'rgba(255,255,255,.04)';
+  document.getElementById('tab-sp').style.borderColor = !isSC ? 'rgba(30,215,96,.35)' : 'rgba(255,255,255,.1)';
+  document.getElementById('tab-sp').style.color = !isSC ? '#1ed760' : 'rgba(200,170,255,.45)';
+  if(!isSC){
+    document.getElementById('sp-embed-area').style.display = '';
+    const saved = localStorage.getItem('sp_url');
+    if(saved && !spotifyController) loadSpotify(saved);
+    if(saved) document.getElementById('sp-input').value = saved;
+  }
+}
+
+document.getElementById('tab-sc').addEventListener('click', ()=>setSource('sc'));
+document.getElementById('tab-sp').addEventListener('click', ()=>setSource('sp'));
+
+// Spotify load button
+document.getElementById('sp-load').addEventListener('click',()=>{
+  const url = document.getElementById('sp-input').value.trim();
+  const msg = document.getElementById('sp-msg');
+  if(!url){ msg.textContent='Вставь ссылку!'; msg.style.color='rgba(255,100,100,.7)'; return; }
+  if(!url.includes('spotify')){ msg.textContent='Это не ссылка Spotify'; msg.style.color='rgba(255,100,100,.7)'; return; }
+  loadSpotify(url);
+});
+
+document.getElementById('sp-input').addEventListener('paste',e=>{
+  setTimeout(()=>{
+    const v = document.getElementById('sp-input').value.trim();
+    if(v.includes('spotify')) document.getElementById('sp-load').click();
+  },80);
+});
+document.getElementById('sp-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('sp-load').click(); });
+document.getElementById('sp-input').addEventListener('focus',e=>e.target.style.borderColor='rgba(30,215,96,.5)');
+document.getElementById('sp-input').addEventListener('blur',e=>e.target.style.borderColor='rgba(30,215,96,.2)');
+
+// Override play/pause/seek for active source
+document.getElementById('btn-play').onclick = ()=>{
+  if(activeSource==='sp' && spotifyController) spotifyController.togglePlay();
+  else if(activeSource==='sc' && widget) widget.toggle();
+};
+document.getElementById('btn-next').onclick = ()=>{ if(activeSource==='sc' && widget) widget.next(); };
+document.getElementById('btn-prev').onclick = ()=>{ if(activeSource==='sc' && widget) widget.prev(); };
+
+document.getElementById('pbar-bg').removeEventListener('click', null);
+document.getElementById('pbar-bg').addEventListener('click',e=>{
+  if(activeSource==='sp' && spotifyController){
+    const r=e.currentTarget.getBoundingClientRect();
+    const pct=(e.clientX-r.left)/r.width;
+    const dur = parseFloat(document.getElementById('dur').textContent.split(':').reduce((m,v,i)=>m+parseFloat(v)*(i===0?60000:1000),0));
+    if(dur>0) spotifyController.seek(pct*dur);
+  } else if(activeSource==='sc' && widget){
+    const r=e.currentTarget.getBoundingClientRect();
+    widget.getDuration(dur=>widget.seekTo((e.clientX-r.left)/r.width*dur));
+  }
+});
+
+// Init saved source
+if(activeSource==='sp') setSource('sp');
+
 // ── PWA INSTALL ──────────────────────────────────────────────
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', e => {
@@ -1131,3 +1286,4 @@ window.addEventListener('appinstalled', () => { document.getElementById('pwa-row
 </script>
 </body>
 </html>
+
