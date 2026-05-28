@@ -18,6 +18,7 @@
   --accent-r: 160; --accent-g: 80; --accent-b: 255;
   --card-w: min(430px, 94vw);
   --card-bg: rgba(14,10,22,0.93);
+  --banner-h: 135px;
 }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { width:100%; height:100%; overflow:hidden; }
@@ -48,9 +49,10 @@ canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
 /* ── BANNER ── */
 .banner {
   position:relative; width:100%;
-  height: clamp(110px,22vw,155px);
+  height: var(--banner-h);
   overflow:hidden; cursor:pointer;
   background: linear-gradient(135deg,#1a0a2e,#2d0b4e,#06060f);
+  transition: height .3s ease;
 }
 .banner-img-el { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; }
 .banner-edit-btn {
@@ -108,7 +110,18 @@ canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
   font-weight:600; color:#fff;
   text-align:center; letter-spacing:.04em;
   margin-bottom: clamp(10px,2vw,14px);
+  cursor:pointer; transition:color .2s;
+  position:relative; display:inline-block;
+  width:100%;
 }
+.username:hover { color:var(--accent-light); }
+.username::after {
+  content:'✎';
+  font-size:10px; margin-left:5px;
+  opacity:0; transition:opacity .2s;
+  vertical-align:middle;
+}
+.username:hover::after { opacity:0.5; }
 .cover-area { display:flex; justify-content:center; margin-bottom: clamp(10px,2vw,14px); }
 .cover-img {
   width: clamp(72px,16vw,92px);
@@ -198,6 +211,37 @@ input[type=range]::-webkit-slider-thumb {
 }
 .vol-val { font-size:10px; color:rgba(200,170,255,.38); min-width:24px; text-align:right; }
 
+/* ── SOURCE SWITCHER ── */
+.source-row {
+  display:flex; align-items:center; justify-content:center;
+  gap:8px; padding:0 clamp(16px,4vw,26px);
+  margin-bottom: clamp(8px,1.5vw,12px);
+}
+.src-btn {
+  display:flex; align-items:center; gap:5px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
+  border-radius:20px; padding:5px 13px;
+  color:rgba(200,170,255,.45); font-size:10px;
+  font-family:'Inter',sans-serif; cursor:pointer;
+  transition:all .2s; letter-spacing:.04em; flex:1; justify-content:center;
+  max-width:130px;
+}
+.src-btn svg { flex-shrink:0; }
+.src-btn:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.12); color:rgba(200,170,255,.85); }
+.src-btn.active {
+  background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
+  border-color:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.55);
+  color:var(--accent-light);
+}
+/* Spotify green accent when active */
+.src-btn[data-src="spotify"].active {
+  border-color:rgba(30,215,96,.5);
+  background:rgba(30,215,96,.1);
+  color:#1ED760;
+}
+.src-btn[data-src="spotify"].active svg { color:#1ED760; }
+
 /* ── SETTINGS TOGGLE ── */
 .settings-row { display:flex; justify-content:center; padding-bottom:6px; }
 .settings-pill {
@@ -276,6 +320,17 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
 .sz-btn:hover,.s-btn:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.1); color:#e0d0ff; }
 .sz-btn.on,.s-btn.on { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.22); border-color:var(--accent); color:#fff; }
 
+/* FPS buttons */
+.fps-btns { display:flex; gap:5px; flex-wrap:wrap; }
+.fps-btn {
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.14);
+  border-radius:7px; padding:4px 9px; font-size:9px;
+  font-family:'Inter',sans-serif; color:rgba(200,170,255,.55); cursor:pointer; transition:all .2s;
+}
+.fps-btn:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.1); color:#e0d0ff; }
+.fps-btn.on { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.22); border-color:var(--accent); color:#fff; }
+
 /* Slider rows */
 .sl-row { display:flex; align-items:center; gap:8px; }
 .sl-row input[type=range] { width:85px; flex:none; }
@@ -295,6 +350,137 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
 .loading { text-align:center; font-size:11px; color:rgba(200,170,255,.35); padding:4px 0 0; }
 
 #sc-widget { display:none; }
+#sp-widget { display:none; }
+
+/* ── EQUALIZER IN SETTINGS ── */
+.eq-bands {
+  display:flex; gap:10px; align-items:stretch;
+  margin-top:6px; margin-bottom:4px;
+}
+.eq-band {
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:5px;
+}
+.eq-band-track {
+  width:100%; height:72px; position:relative;
+  display:flex; align-items:center; justify-content:center;
+}
+/* vertical range slider */
+.eq-band input[type=range].eq-slider {
+  -webkit-appearance:slider-vertical;
+  writing-mode:vertical-lr;
+  direction:rtl;
+  width:24px; height:68px;
+  background:transparent; outline:none; cursor:pointer;
+  flex:none; position:relative; z-index:2;
+  -webkit-appearance:none; appearance:none;
+}
+.eq-band input[type=range].eq-slider::-webkit-slider-container { writing-mode:vertical-lr; direction:rtl; }
+.eq-band input[type=range].eq-slider::-webkit-slider-runnable-track {
+  width:4px; border-radius:2px; background:rgba(255,255,255,.1);
+}
+.eq-band input[type=range].eq-slider::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:16px; height:16px; border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 8px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.7);
+  margin-left:-6px;
+}
+.eq-band input[type=range].eq-slider::-moz-range-track {
+  width:4px; border-radius:2px; background:rgba(255,255,255,.1);
+}
+.eq-band input[type=range].eq-slider::-moz-range-thumb {
+  width:16px; height:16px; border-radius:50%; border:none;
+  background:var(--accent);
+  box-shadow:0 0 8px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.7);
+}
+/* animated fill bar behind slider */
+.eq-bar-wrap {
+  position:absolute; left:50%; transform:translateX(-50%);
+  width:18px; height:100%; border-radius:3px;
+  background:rgba(255,255,255,.06); overflow:hidden; pointer-events:none;
+}
+.eq-bar-fill {
+  position:absolute; bottom:50%; left:0; width:100%;
+  border-radius:3px; transition:height .1s ease, bottom .1s ease;
+  background:linear-gradient(0deg, var(--accent), var(--accent-light));
+}
+.eq-bar-fill.negative {
+  background:linear-gradient(0deg, rgba(255,70,70,.8), rgba(255,110,110,.6));
+}
+.eq-band-name {
+  font-size:9px; color:rgba(200,170,255,.4);
+  letter-spacing:.06em; text-transform:uppercase;
+}
+.eq-band-val {
+  font-size:10px; color:rgba(200,170,255,.6);
+  min-width:30px; text-align:center; font-family:'Inter',sans-serif;
+}
+.eq-reset-btn {
+  background:none; border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.2);
+  border-radius:6px; padding:3px 10px; font-size:9px; color:rgba(200,170,255,.4);
+  cursor:pointer; font-family:'Inter',sans-serif; letter-spacing:.04em; transition:all .2s;
+}
+.eq-reset-btn:hover { border-color:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.5); color:rgba(200,170,255,.8); }
+
+/* ── PULSE SETTINGS ── */
+.pulse-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; }
+.pulse-toggle {
+  position:relative; width:34px; height:18px; cursor:pointer;
+}
+.pulse-toggle input { opacity:0; width:0; height:0; position:absolute; }
+.pulse-toggle-track {
+  position:absolute; inset:0; border-radius:9px;
+  background:rgba(255,255,255,.1); transition:background .2s;
+}
+.pulse-toggle input:checked + .pulse-toggle-track { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.6); }
+.pulse-toggle-thumb {
+  position:absolute; top:3px; left:3px;
+  width:12px; height:12px; border-radius:50%;
+  background:#fff; transition:transform .2s;
+}
+.pulse-toggle input:checked ~ .pulse-toggle-thumb { transform:translateX(16px); }
+
+/* ── PULSE ANIMATIONS — simple continuous, no JS timers ── */
+@keyframes glowPulse {
+  0%,100% {
+    box-shadow: 0 8px 28px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 8px 40px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.55), 0 0 0 4px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
+    transform: scale(1.045);
+  }
+}
+@keyframes glowPulseSpin {
+  0%,100% {
+    box-shadow: 0 8px 28px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
+  }
+  50% {
+    box-shadow: 0 8px 40px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.55), 0 0 0 4px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
+  }
+}
+@keyframes bannerGlow {
+  0%,100% { box-shadow: inset 0 0 0px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0); }
+  50%      { box-shadow: inset 0 0 40px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.28); }
+}
+@keyframes avatarGlow {
+  0%,100% { box-shadow: 0 0 0px rgba(var(--accent-r),var(--accent-g),var(--accent-b),0); }
+  50%      { box-shadow: 0 0 18px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.7); }
+}
+
+/* applied when playing */
+.cover-img.pulse-on {
+  animation: glowPulse var(--pulse-dur, 0.8s) ease-in-out infinite !important;
+}
+.cover-img.pulse-on.playing {
+  animation: spin 12s linear infinite, glowPulseSpin var(--pulse-dur, 0.8s) ease-in-out infinite !important;
+}
+#banner.pulse-on {
+  animation: bannerGlow var(--pulse-dur, 0.8s) ease-in-out infinite;
+}
+#avatar-img.pulse-on {
+  animation: avatarGlow var(--pulse-dur, 0.8s) ease-in-out infinite;
+}
 
 /* ── MOBILE ── */
 @media (max-width:480px) {
@@ -415,8 +601,17 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
 <div id="intro">
  <canvas id="intro-bg"></canvas>
  <div class="intro-content">
-  <div class="intro-tag">#aquafine</div>
+  <div class="intro-tag" id="intro-tag">#aquafine</div>
   <div class="intro-sub">нажми чтобы войти</div>
+
+  <!-- ник при первом запуске -->
+  <div id="intro-nick-wrap" style="display:none;flex-direction:column;align-items:center;gap:8px;width:min(280px,80vw)">
+   <div style="font-size:10px;color:rgba(200,170,255,.5);letter-spacing:.1em;text-transform:uppercase">твой ник</div>
+   <div style="display:flex;gap:7px;width:100%">
+    <input type="text" id="intro-nick-input" maxlength="24" placeholder="#yourname"
+     style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(160,80,255,.3);border-radius:10px;padding:10px 14px;color:#e0d0ff;font-size:13px;font-family:'Unbounded',sans-serif;outline:none;letter-spacing:.04em;text-align:center;-webkit-appearance:none;">
+   </div>
+  </div>
 
   <button class="enter-btn" id="enter-btn">
    <svg class="enter-skull" width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -463,7 +658,7 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
    </div>
   </div>
 
-  <div class="username">#aquafine</div>
+  <div class="username" id="username-display" title="Изменить ник">#aquafine</div>
 
   <!-- COVER -->
   <div class="cover-area">
@@ -496,10 +691,23 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
   </div>
 
   <!-- VOLUME -->
-  <div class="volume-row">
+  <div class="volume-row" id="vol-row">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
    <input type="range" id="vol-range" min="0" max="100" value="80">
    <span class="vol-val" id="vol-val">80</span>
+  </div>
+  <div id="sp-vol-note" style="display:none;text-align:center;font-size:9px;color:rgba(30,215,96,.45);padding:0 16px 6px;letter-spacing:.04em;">громкость — в плеере Spotify ниже</div>
+
+  <!-- SOURCE SWITCHER -->
+  <div class="source-row">
+   <button class="src-btn active" data-src="soundcloud" id="src-sc">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M1.175 12.225c-.056 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.045.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.05-.1-.1-.1zm1.167-.45c-.072 0-.124.055-.132.127l-.2 2.577.2 2.476c.008.07.06.127.132.127.073 0 .124-.057.132-.127l.228-2.476-.228-2.577c-.008-.072-.059-.127-.132-.127zm1.2-.195c-.088 0-.154.067-.162.155l-.172 2.772.172 2.634c.008.087.074.154.162.154.09 0 .155-.067.163-.154l.198-2.634-.198-2.772c-.008-.088-.073-.155-.163-.155zm1.206-.047c-.105 0-.186.082-.192.187l-.142 2.819.142 2.668c.006.105.087.187.192.187.104 0 .186-.082.193-.187l.16-2.668-.16-2.819c-.007-.105-.089-.187-.193-.187zm1.23.01c-.12 0-.215.096-.22.217l-.11 2.809.11 2.671c.005.121.1.217.22.217.12 0 .215-.096.22-.217l.125-2.671-.125-2.809c-.005-.121-.1-.217-.22-.217zm1.2-.096c-.135 0-.243.108-.247.244l-.08 2.905.08 2.666c.004.136.112.244.247.244.135 0 .243-.108.247-.244l.09-2.666-.09-2.905c-.004-.136-.112-.244-.247-.244zm1.23.163c-.15 0-.27.12-.273.27l-.05 2.742.05 2.652c.003.15.123.27.273.27.15 0 .27-.12.273-.27l.056-2.652-.056-2.742c-.003-.15-.123-.27-.273-.27zM11.5 9.1c-.165 0-.297.133-.3.298l-.02 3.051.02 2.636c.003.165.135.298.3.298.165 0 .297-.133.3-.298l.022-2.636-.022-3.051c-.003-.165-.135-.298-.3-.298zm1.256-.383c-.18 0-.325.145-.327.325l0 3.434 0 2.62c.002.18.147.325.327.325.18 0 .325-.145.327-.325l0-2.62 0-3.434c-.002-.18-.147-.325-.327-.325zm9.544 3.716c-.467 0-.91.1-1.31.276-.27-3.07-2.82-5.46-5.96-5.46-1.07 0-2.07.3-2.92.82v10.32h10.19c1.38 0 2.5-1.12 2.5-2.5 0-1.38-1.12-2.5-2.5-2.5v.097z"/></svg>
+    SoundCloud
+   </button>
+   <button class="src-btn" data-src="spotify" id="src-sp">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+    Spotify
+   </button>
   </div>
 
   <!-- INSTALL PWA -->
@@ -663,6 +871,16 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
     </div>
    </div>
 
+   <!-- BANNER HEIGHT -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 3H3M21 21H3M12 6v12M8 9l4-3 4 3M8 15l4 3 4-3"/></svg>
+    Высота баннера
+   </div>
+   <div class="s-row">
+    <span class="s-label">px</span>
+    <div class="sl-row"><input type="range" id="s-bh" min="40" max="280" value="135" step="5"><span class="sl-v" id="v-bh">135</span></div>
+   </div>
+
    <!-- TILT -->
    <div class="s-section">
     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 9-6 6 6 6"/><path d="m15 9 6 6-6 6"/></svg>
@@ -676,15 +894,112 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
    <!-- PLAYLIST -->
    <div class="s-section">
     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-    Свой плейлист
+    SoundCloud плейлист
    </div>
    <div style="padding:0 0 12px">
     <div style="font-size:10px;color:rgba(200,170,255,.4);margin-bottom:7px;line-height:1.5">Вставь ссылку на плейлист SoundCloud</div>
-    <div style="display:flex;gap:7px;align-items:center">
-     <input type="text" id="pl-input" placeholder="https://soundcloud.com/..." style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(160,80,255,.2);border-radius:8px;padding:7px 10px;color:#e0d0ff;font-size:11px;font-family:Inter,sans-serif;outline:none;">
-     <button id="pl-load" style="background:rgba(160,80,255,.18);border:1px solid rgba(160,80,255,.35);border-radius:8px;padding:7px 12px;color:#bf6fff;font-size:11px;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;transition:all .2s">Загрузить</button>
+    <div style="display:flex;gap:7px;align-items:center;margin-bottom:6px">
+     <input type="url" inputmode="url" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="pl-input" placeholder="https://soundcloud.com/..." style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(160,80,255,.2);border-radius:8px;padding:10px 12px;color:#e0d0ff;font-size:12px;font-family:Inter,sans-serif;outline:none;min-height:40px;-webkit-appearance:none;">
+     <button id="pl-paste-btn" title="Вставить из буфера" style="flex-shrink:0;background:rgba(160,80,255,.12);border:1px solid rgba(160,80,255,.3);border-radius:8px;padding:0 11px;height:40px;color:#bf6fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s">📋</button>
     </div>
+    <button id="pl-load" style="width:100%;background:rgba(160,80,255,.18);border:1px solid rgba(160,80,255,.35);border-radius:8px;padding:10px 12px;color:#bf6fff;font-size:12px;font-family:Inter,sans-serif;cursor:pointer;transition:all .2s;min-height:40px">Загрузить плейлист</button>
     <div id="pl-msg" style="font-size:10px;color:rgba(160,80,255,.6);margin-top:6px;min-height:14px"></div>
+   </div>
+
+   <!-- SPOTIFY PLAYLIST -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="color:#1ED760"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+    Spotify плейлист
+   </div>
+   <div style="padding:0 0 12px">
+    <div style="font-size:10px;color:rgba(200,170,255,.4);margin-bottom:7px;line-height:1.5">Вставь ссылку на плейлист / трек / альбом Spotify</div>
+    <div style="display:flex;gap:7px;align-items:center;margin-bottom:6px">
+     <input type="url" inputmode="url" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="sp-input" placeholder="https://open.spotify.com/..." style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(30,215,96,.2);border-radius:8px;padding:10px 12px;color:#e0d0ff;font-size:12px;font-family:Inter,sans-serif;outline:none;min-height:40px;-webkit-appearance:none;">
+     <button id="sp-paste-btn" title="Вставить из буфера" style="flex-shrink:0;background:rgba(30,215,96,.08);border:1px solid rgba(30,215,96,.25);border-radius:8px;padding:0 11px;height:40px;color:#1ED760;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s">📋</button>
+    </div>
+    <button id="sp-load" style="width:100%;background:rgba(30,215,96,.12);border:1px solid rgba(30,215,96,.3);border-radius:8px;padding:10px 12px;color:#1ED760;font-size:12px;font-family:Inter,sans-serif;cursor:pointer;transition:all .2s;min-height:40px">Загрузить в Spotify</button>
+    <div id="sp-msg" style="font-size:10px;color:rgba(30,215,96,.6);margin-top:6px;min-height:14px"></div>
+   </div>
+
+   <!-- FPS -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/><circle cx="19" cy="5" r="3"/></svg>
+    FPS анимации
+   </div>
+   <div class="s-row">
+    <div class="fps-btns">
+     <button class="fps-btn" data-fps="60">60</button>
+     <button class="fps-btn" data-fps="120">120</button>
+     <button class="fps-btn on" data-fps="165">165</button>
+     <button class="fps-btn" data-fps="240">240</button>
+     <button class="fps-btn" data-fps="360">360</button>
+     <button class="fps-btn" data-fps="0">∞</button>
+    </div>
+   </div>
+
+   <!-- EQUALIZER -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+    Эквалайзер
+   </div>
+   <div class="eq-bands">
+    <div class="eq-band">
+     <div class="eq-band-val" id="eq-val-bass">0</div>
+     <div class="eq-band-track">
+      <div class="eq-bar-wrap"><div class="eq-bar-fill" id="eq-bar-bass" style="height:0%;bottom:50%"></div></div>
+      <input type="range" class="eq-slider" id="eq-bass" min="-12" max="12" value="0" step="1">
+     </div>
+     <div class="eq-band-name">Bass</div>
+    </div>
+    <div class="eq-band">
+     <div class="eq-band-val" id="eq-val-mid">0</div>
+     <div class="eq-band-track">
+      <div class="eq-bar-wrap"><div class="eq-bar-fill" id="eq-bar-mid" style="height:0%;bottom:50%"></div></div>
+      <input type="range" class="eq-slider" id="eq-mid" min="-12" max="12" value="0" step="1">
+     </div>
+     <div class="eq-band-name">Mid</div>
+    </div>
+    <div class="eq-band">
+     <div class="eq-band-val" id="eq-val-treble">0</div>
+     <div class="eq-band-track">
+      <div class="eq-bar-wrap"><div class="eq-bar-fill" id="eq-bar-treble" style="height:0%;bottom:50%"></div></div>
+      <input type="range" class="eq-slider" id="eq-treble" min="-12" max="12" value="0" step="1">
+     </div>
+     <div class="eq-band-name">Treble</div>
+    </div>
+   </div>
+   <div class="s-row" style="margin-top:4px">
+    <span class="s-label" style="font-size:10px;color:rgba(200,170,255,.35)">Web Audio API</span>
+    <button class="eq-reset-btn" id="eq-reset">сброс</button>
+   </div>
+
+   <!-- ПУЛЬСАЦИЯ -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Пульсация в такт
+   </div>
+   <div class="pulse-row">
+    <span class="s-label">Обложка / баннер</span>
+    <label class="pulse-toggle">
+     <input type="checkbox" id="pulse-toggle" checked>
+     <div class="pulse-toggle-track"></div>
+     <div class="pulse-toggle-thumb"></div>
+    </label>
+   </div>
+   <div class="s-row">
+    <span class="s-label">Сила пульса</span>
+    <div class="sl-row"><input type="range" id="pulse-strength" min="1" max="10" value="5"><span class="sl-v" id="v-pulse">5</span></div>
+   </div>
+
+   <!-- НИК -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Ник
+   </div>
+   <div style="display:flex;gap:7px;align-items:center;margin-bottom:12px">
+    <input type="text" id="nick-input" maxlength="24" placeholder="#yourname"
+     style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(160,80,255,.2);border-radius:8px;padding:9px 12px;color:#e0d0ff;font-size:12px;font-family:'Unbounded',sans-serif;outline:none;min-height:38px;letter-spacing:.04em;-webkit-appearance:none;">
+    <button id="nick-save" style="flex-shrink:0;background:rgba(160,80,255,.18);border:1px solid rgba(160,80,255,.35);border-radius:8px;padding:0 14px;height:38px;color:#bf6fff;font-size:11px;font-family:Inter,sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap">Сохранить</button>
    </div>
 
    <!-- UPLOADS -->
@@ -710,6 +1025,17 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
   </div><!-- /s-panel -->
 
   <div class="loading" id="status">Подключение...</div>
+
+  <!-- SPOTIFY EMBED (внутри карточки, снизу) -->
+  <div id="sp-embed-wrap" style="display:none; overflow:hidden; border-top:1px solid rgba(30,215,96,.12); margin-top:2px;">
+   <iframe id="sp-widget"
+    src=""
+    width="100%" height="152" frameborder="0"
+    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+    style="display:block; border:0; border-radius:0 0 clamp(13px,1.8vw,20px) clamp(13px,1.8vw,20px);">
+   </iframe>
+  </div>
+
  </div><!-- /card -->
 </div><!-- /scene -->
 
@@ -752,6 +1078,8 @@ function init(){
   } else if(wx==='stars'){
     const n=~~(300*(intensV/5));
     for(let i=0;i<n;i++) parts.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.3,tw:Math.random()*Math.PI*2,tws:Math.random()*.03+.005,ba:Math.random()*.6+.2});
+  } else if(wx==='skulls'){
+    makeSkullRain();
   }
 }
 
@@ -824,10 +1152,25 @@ function frame(){
       const a=p.ba*(.5+.5*Math.sin(p.tw));
       ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=`rgba(${fR},${fG},${fB},${a})`; ctx.fill();
     }
+  } else if(wx==='skulls'){
+    drawSkulls();
   }
-  requestAnimationFrame(frame);
 }
-frame();
+
+// ── ANIMATION LOOP WITH FPS CONTROL ─────────────────────────
+let fpsLimit = 165;
+let lastFrameTime = 0;
+
+function loop(now){
+  requestAnimationFrame(loop);
+  if(fpsLimit > 0){
+    const interval = 1000 / fpsLimit;
+    if(now - lastFrameTime < interval) return;
+    lastFrameTime = now - ((now - lastFrameTime) % interval);
+  }
+  frame();
+}
+requestAnimationFrame(loop);
 
 // ── TILT ────────────────────────────────────────────────────
 const scene=document.getElementById('scene');
@@ -878,6 +1221,10 @@ function applySettings(){
   const cw = S.load('card_w','430');
   document.documentElement.style.setProperty('--card-w',`min(${cw}px,94vw)`);
   maxT = S.load('tilt',14); document.getElementById('s-tilt').value=maxT; document.getElementById('v-tilt').textContent=maxT;
+  const bh = S.load('banner_h', 135);
+  document.documentElement.style.setProperty('--banner-h', bh+'px');
+  document.getElementById('s-bh').value = bh;
+  document.getElementById('v-bh').textContent = bh;
   // Mark active wx button
   document.querySelectorAll('.wx-btn').forEach(b=>{ b.classList.toggle('on', b.dataset.wx===wx); });
   // overlay
@@ -909,8 +1256,30 @@ document.getElementById('s-spd').addEventListener('input',e=>{ spdV=+e.target.va
 // Card size
 document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('[data-w]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); document.documentElement.style.setProperty('--card-w',`min(${b.dataset.w}px,94vw)`); S.save('card_w',b.dataset.w); }));
 
+// Banner height
+document.getElementById('s-bh').addEventListener('input',e=>{
+  const v = +e.target.value;
+  document.getElementById('v-bh').textContent = v;
+  document.documentElement.style.setProperty('--banner-h', v+'px');
+  S.save('banner_h', v);
+});
+
 // Tilt
 document.getElementById('s-tilt').addEventListener('input',e=>{ maxT=+e.target.value; document.getElementById('v-tilt').textContent=maxT; S.save('tilt',maxT); });
+
+// FPS
+const fpsSaved = S.load('fps', 165);
+fpsLimit = fpsSaved;
+document.querySelectorAll('.fps-btn').forEach(b=>{
+  const v = +b.dataset.fps;
+  b.classList.toggle('on', v === fpsSaved);
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.fps-btn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    fpsLimit = v;
+    S.save('fps', v);
+  });
+});
 
 // Uploads with base64 save
 function fileToBase64(file, cb){ const r=new FileReader(); r.onload=e=>cb(e.target.result); r.readAsDataURL(file); }
@@ -942,15 +1311,31 @@ document.getElementById('up-avatar').addEventListener('change',e=>{
   if(a){ document.getElementById('avatar-img').innerHTML=`<img src="${a}" style="width:100%;height:100%;object-fit:cover;">`; }
 })();
 
-// ── SOUNDCLOUD ───────────────────────────────────────────────
+// ── AUDIO SOURCE MANAGER ─────────────────────────────────────
 const statusEl=document.getElementById('status');
 const volRange=document.getElementById('vol-range');
 const volVal=document.getElementById('vol-val');
 function fmt(ms){ const s=~~(ms/1000); return ~~(s/60)+':'+String(s%60).padStart(2,'0'); }
 
 let widget = null;
+let currentSource = 'soundcloud'; // 'soundcloud' | 'spotify'
 const DEFAULT_PL = 'https://soundcloud.com/1707213/sets/na-podumat';
 
+// ── UI STATE HELPERS ─────────────────────────────────────────
+function setPlayIcon(playing){
+  document.getElementById('ico-play').style.display = playing ? 'none' : '';
+  document.getElementById('ico-pause').style.display = playing ? '' : 'none';
+  const cover = document.getElementById('cover');
+  if(playing) cover.classList.add('playing'); else cover.classList.remove('playing');
+}
+
+function resetProgress(){
+  document.getElementById('pbar-fill').style.width='0%';
+  document.getElementById('cur').textContent='0:00';
+  document.getElementById('dur').textContent='0:00';
+}
+
+// ── SOUNDCLOUD ───────────────────────────────────────────────
 function updateTrackInfo(w){
   w.getCurrentSound(s=>{
     if(!s) return;
@@ -960,33 +1345,61 @@ function updateTrackInfo(w){
   });
 }
 
+// ── PULSE STATE ───────────────────────────────────────────────
+let _pulseEnabled   = true;
+let _pulseStrength  = 5;
+let _pulseIsPlaying = false;
+
+function _pulseApply(){
+  const cover  = document.getElementById('cover');
+  const banner = document.getElementById('banner');
+  const avatar = document.getElementById('avatar-img');
+  const on = _pulseEnabled && _pulseIsPlaying;
+  // speed: strength 1→1.4s, 5→0.7s, 10→0.35s
+  const dur = (1.6 - _pulseStrength * 0.12).toFixed(2) + 's';
+  document.documentElement.style.setProperty('--pulse-dur', dur);
+  cover.classList.toggle('pulse-on',  on);
+  banner.classList.toggle('pulse-on', on);
+  avatar.classList.toggle('pulse-on', on);
+}
+
+function _pulseStart(){ _pulseIsPlaying = true;  _pulseApply(); }
+function _pulseStop () { _pulseIsPlaying = false; _pulseApply(); }
+
+
 function bindWidget(w){
   w.bind(SC.Widget.Events.READY,()=>{
     statusEl.textContent='';
     w.setVolume(+volRange.value||80);
-    updateTrackInfo(w);
+    if(currentSource==='soundcloud') updateTrackInfo(w);
   });
   w.bind(SC.Widget.Events.PLAY,()=>{
-    document.getElementById('ico-play').style.display='none';
-    document.getElementById('ico-pause').style.display='';
-    document.getElementById('cover').classList.add('playing');
+    if(currentSource!=='soundcloud') return;
+    setPlayIcon(true);
     updateTrackInfo(w);
+    _pulseStart();
   });
   w.bind(SC.Widget.Events.PAUSE,()=>{
-    document.getElementById('ico-play').style.display='';
-    document.getElementById('ico-pause').style.display='none';
-    document.getElementById('cover').classList.remove('playing');
+    if(currentSource!=='soundcloud') return;
+    setPlayIcon(false);
+    _pulseStop();
   });
   w.bind(SC.Widget.Events.PLAY_PROGRESS,d=>{
+    if(currentSource!=='soundcloud') return;
     document.getElementById('cur').textContent=fmt(d.currentPosition);
     w.getDuration(dur=>{ if(dur>0){ document.getElementById('dur').textContent=fmt(dur); document.getElementById('pbar-fill').style.width=(d.currentPosition/dur*100)+'%'; } });
   });
-  w.bind(SC.Widget.Events.FINISH,()=>w.next());
+  w.bind(SC.Widget.Events.FINISH,()=>{
+    if(currentSource==='soundcloud') w.next();
+    _pulseStop();
+  });
 }
 
 function loadPlaylist(url, onDone){
   const iframe = document.getElementById('sc-widget');
   const src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
+  // Destroy old widget binding first
+  if(widget){ try{ widget.unbind(SC.Widget.Events.READY); widget.unbind(SC.Widget.Events.PLAY); widget.unbind(SC.Widget.Events.PAUSE); widget.unbind(SC.Widget.Events.PLAY_PROGRESS); widget.unbind(SC.Widget.Events.FINISH); }catch(e){} widget=null; }
   iframe.src = src;
   iframe.onload = ()=>{
     widget = SC.Widget(iframe);
@@ -995,23 +1408,122 @@ function loadPlaylist(url, onDone){
   };
 }
 
-// Init with saved or default playlist
+// Init SC with saved or default playlist
 const savedPl = localStorage.getItem('pl_url') || DEFAULT_PL;
 loadPlaylist(savedPl);
 if(savedPl !== DEFAULT_PL) document.getElementById('pl-input').value = savedPl;
 
-document.getElementById('btn-play').onclick=()=>widget&&widget.toggle();
-document.getElementById('btn-next').onclick=()=>widget&&widget.next();
-document.getElementById('btn-prev').onclick=()=>widget&&widget.prev();
+// ── SPOTIFY ──────────────────────────────────────────────────
+const DEFAULT_SP = 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M';
+let spCurrentUrl = localStorage.getItem('sp_url') || DEFAULT_SP;
+
+function getSpotifyEmbedUrl(url){
+  try {
+    const u = new URL(url);
+    if(!u.hostname.includes('spotify.com')) return null;
+    // Strip /intl-XX locale prefix
+    const path = u.pathname.replace(/^\/intl-[a-z-]+/, '');
+    return 'https://open.spotify.com/embed' + path + '?utm_source=generator&theme=0';
+  } catch(e){ return null; }
+}
+
+function loadSpotify(url){
+  const embedUrl = getSpotifyEmbedUrl(url);
+  if(!embedUrl) return false;
+  const iframe = document.getElementById('sp-widget');
+  // Must set src via attribute to trigger proper load
+  iframe.setAttribute('src', embedUrl);
+  localStorage.setItem('sp_url', url);
+  spCurrentUrl = url;
+  return true;
+}
+
+// Pre-load Spotify embed immediately
+loadSpotify(spCurrentUrl);
+
+// ── SOURCE SWITCHING ─────────────────────────────────────────
+function switchSource(src){
+  if(currentSource === src) return;
+  if(currentSource === 'soundcloud' && widget){
+    try { widget.pause(); } catch(e){}
+  }
+  currentSource = src;
+  S.save('source', src);
+
+  const spWrap = document.getElementById('sp-embed-wrap');
+  const srcSc = document.getElementById('src-sc');
+  const srcSp = document.getElementById('src-sp');
+  const volRow = document.getElementById('vol-row');
+  const spVolNote = document.getElementById('sp-vol-note');
+
+  if(src === 'soundcloud'){
+    srcSc.classList.add('active'); srcSp.classList.remove('active');
+    spWrap.style.display = 'none';
+    document.getElementById('btn-prev').style.display='';
+    document.getElementById('btn-next').style.display='';
+    document.getElementById('btn-play').style.display='';
+    document.getElementById('pbar-bg').style.pointerEvents='';
+    document.getElementById('pbar-bg').style.opacity='1';
+    volRow.style.opacity='1'; volRow.style.pointerEvents='';
+    spVolNote.style.display='none';
+    resetProgress();
+    statusEl.textContent='';
+    // Restore SC track info
+    if(widget) updateTrackInfo(widget);
+  } else {
+    srcSp.classList.add('active'); srcSc.classList.remove('active');
+    spWrap.style.display = 'block';
+    document.getElementById('btn-prev').style.display='none';
+    document.getElementById('btn-next').style.display='none';
+    document.getElementById('btn-play').style.display='none';
+    document.getElementById('pbar-bg').style.pointerEvents='none';
+    document.getElementById('pbar-bg').style.opacity='.3';
+    resetProgress();
+    setPlayIcon(false);
+    // Volume: grey out — Spotify embed doesn't accept external volume commands
+    volRow.style.opacity='.3'; volRow.style.pointerEvents='none';
+    spVolNote.style.display='block';
+    // Clear SC track info, show Spotify placeholder
+    document.getElementById('title').textContent='Spotify';
+    document.getElementById('artist').textContent='играет ниже';
+    // Spotify green cover placeholder
+    document.getElementById('cover').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Crect width='92' height='92' fill='%23121212'/%3E%3Ccircle cx='46' cy='46' r='36' fill='%231ED760' opacity='.12'/%3E%3Cpath d='M46 18C30.536 18 18 30.536 18 46s12.536 28 28 28 28-12.536 28-28S61.464 18 46 18zm12.843 40.356a1.75 1.75 0 0 1-2.408.583c-6.593-4.029-14.9-4.941-24.678-2.708a1.75 1.75 0 1 1-.779-3.413c10.698-2.444 19.883-1.391 27.282 3.13a1.75 1.75 0 0 1 .583 2.408zm3.428-7.63a2.188 2.188 0 0 1-3.009.72c-7.545-4.637-19.047-5.98-27.972-3.27a2.188 2.188 0 1 1-1.27-4.187c10.196-3.095 22.878-1.596 31.531 3.728a2.188 2.188 0 0 1 .72 3.01zm.295-7.942c-9.047-5.374-23.975-5.87-32.6-3.247a2.625 2.625 0 1 1-1.525-5.022c9.91-3.009 26.388-2.427 36.79 3.757a2.625 2.625 0 1 1-2.665 4.512z' fill='%231ED760'/%3E%3C/svg%3E";
+    document.getElementById('cover').style.background='#121212';
+    statusEl.textContent='';
+  }
+}
+
+// Restore saved source
+const savedSource = S.load('source','soundcloud');
+if(savedSource === 'spotify') {
+  // defer so DOM is ready
+  setTimeout(()=>switchSource('spotify'), 100);
+}
+
+document.getElementById('src-sc').addEventListener('click', ()=>switchSource('soundcloud'));
+document.getElementById('src-sp').addEventListener('click', ()=>switchSource('spotify'));
+
+// ── PLAYBACK CONTROLS ────────────────────────────────────────
+document.getElementById('btn-play').onclick=()=>{
+  if(currentSource==='soundcloud' && widget) widget.toggle();
+};
+document.getElementById('btn-next').onclick=()=>{ if(widget) widget.next(); };
+document.getElementById('btn-prev').onclick=()=>{ if(widget) widget.prev(); };
 document.getElementById('pbar-bg').addEventListener('click',e=>{
-  if(!widget) return;
+  if(currentSource!=='soundcloud' || !widget) return;
   const r=e.currentTarget.getBoundingClientRect();
   widget.getDuration(dur=>widget.seekTo((e.clientX-r.left)/r.width*dur));
 });
-volRange.addEventListener('input',()=>{ const v=+volRange.value; volVal.textContent=v; if(widget) widget.setVolume(v); });
 
-// ── PLAYLIST LOADER ──────────────────────────────────────────
-document.getElementById('pl-load').addEventListener('click',()=>{
+// ── VOLUME ───────────────────────────────────────────────────
+volRange.addEventListener('input',()=>{
+  const v=+volRange.value;
+  volVal.textContent=v;
+  if(currentSource==='soundcloud' && widget) widget.setVolume(v);
+});
+
+// ── SC PLAYLIST LOADER ───────────────────────────────────────
+function tryLoadPlaylist(){
   const url = document.getElementById('pl-input').value.trim();
   const msg = document.getElementById('pl-msg');
   if(!url){ msg.textContent='Вставь ссылку!'; msg.style.color='rgba(255,100,100,.7)'; return; }
@@ -1019,13 +1531,287 @@ document.getElementById('pl-load').addEventListener('click',()=>{
   msg.textContent='Загружаю...'; msg.style.color='rgba(160,80,255,.7)';
   loadPlaylist(url, ()=>{
     localStorage.setItem('pl_url', url);
-    msg.textContent='Плейлист сохранён!'; msg.style.color='rgba(100,220,130,.8)';
+    msg.textContent='✓ Плейлист загружен!'; msg.style.color='rgba(100,220,130,.8)';
     setTimeout(()=>msg.textContent='', 3000);
   });
-});
-document.getElementById('pl-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('pl-load').click(); });
+}
+
+document.getElementById('pl-load').addEventListener('click', tryLoadPlaylist);
+document.getElementById('pl-input').addEventListener('keydown',e=>{ if(e.key==='Enter') tryLoadPlaylist(); });
 document.getElementById('pl-input').addEventListener('focus',e=>e.target.style.borderColor='rgba(160,80,255,.55)');
 document.getElementById('pl-input').addEventListener('blur',e=>e.target.style.borderColor='rgba(160,80,255,.2)');
+document.getElementById('pl-input').addEventListener('paste', ()=>{
+  setTimeout(()=>{
+    const url = document.getElementById('pl-input').value.trim();
+    if(url.includes('soundcloud.com')) tryLoadPlaylist();
+  }, 80);
+});
+
+document.getElementById('pl-paste-btn').addEventListener('click', async ()=>{
+  const msg = document.getElementById('pl-msg');
+  try {
+    if(navigator.clipboard && navigator.clipboard.readText){
+      const text = await navigator.clipboard.readText();
+      document.getElementById('pl-input').value = text.trim();
+      if(text.includes('soundcloud.com')) tryLoadPlaylist();
+      else { msg.textContent='Нет ссылки SoundCloud в буфере'; msg.style.color='rgba(255,100,100,.7)'; }
+    } else {
+      document.getElementById('pl-input').focus();
+      msg.textContent='Нажми и держи поле → «Вставить»';
+      msg.style.color='rgba(160,80,255,.7)';
+      setTimeout(()=>msg.textContent='', 3000);
+    }
+  } catch(e){
+    document.getElementById('pl-input').focus();
+    msg.textContent='Нажми и держи поле → «Вставить»';
+    msg.style.color='rgba(160,80,255,.7)';
+    setTimeout(()=>msg.textContent='', 3000);
+  }
+});
+
+// ── SPOTIFY PLAYLIST LOADER ──────────────────────────────────
+function tryLoadSpotify(){
+  const url = document.getElementById('sp-input').value.trim();
+  const msg = document.getElementById('sp-msg');
+  if(!url){ msg.textContent='Вставь ссылку!'; msg.style.color='rgba(255,100,100,.7)'; return; }
+  if(!url.includes('spotify.com')){ msg.textContent='Это не ссылка Spotify'; msg.style.color='rgba(255,100,100,.7)'; return; }
+  msg.textContent='Загружаю...'; msg.style.color='rgba(30,215,96,.6)';
+  const ok = loadSpotify(url);
+  if(ok){
+    msg.textContent='✓ Загружено! Переключись на Spotify'; msg.style.color='rgba(30,215,96,.8)';
+    setTimeout(()=>msg.textContent='', 4000);
+  } else {
+    msg.textContent='Неверная ссылка Spotify'; msg.style.color='rgba(255,100,100,.7)';
+  }
+}
+
+document.getElementById('sp-load').addEventListener('click', tryLoadSpotify);
+document.getElementById('sp-input').addEventListener('keydown',e=>{ if(e.key==='Enter') tryLoadSpotify(); });
+document.getElementById('sp-input').addEventListener('focus',e=>e.target.style.borderColor='rgba(30,215,96,.4)');
+document.getElementById('sp-input').addEventListener('blur',e=>e.target.style.borderColor='rgba(30,215,96,.2)');
+document.getElementById('sp-input').addEventListener('paste', ()=>{
+  setTimeout(()=>{
+    const url = document.getElementById('sp-input').value.trim();
+    if(url.includes('spotify.com')) tryLoadSpotify();
+  }, 80);
+});
+
+document.getElementById('sp-paste-btn').addEventListener('click', async ()=>{
+  const msg = document.getElementById('sp-msg');
+  try {
+    if(navigator.clipboard && navigator.clipboard.readText){
+      const text = await navigator.clipboard.readText();
+      document.getElementById('sp-input').value = text.trim();
+      if(text.includes('spotify.com')) tryLoadSpotify();
+      else { msg.textContent='Нет ссылки Spotify в буфере'; msg.style.color='rgba(255,100,100,.7)'; }
+    } else {
+      document.getElementById('sp-input').focus();
+      msg.textContent='Нажми и держи поле → «Вставить»';
+      msg.style.color='rgba(30,215,96,.6)';
+      setTimeout(()=>msg.textContent='', 3000);
+    }
+  } catch(e){
+    document.getElementById('sp-input').focus();
+    msg.textContent='Нажми и держи поле → «Вставить»';
+    msg.style.color='rgba(30,215,96,.6)';
+    setTimeout(()=>msg.textContent='', 3000);
+  }
+});
+// Pre-fill SP input with saved URL
+if(spCurrentUrl !== DEFAULT_SP) document.getElementById('sp-input').value = spCurrentUrl;
+
+// ══════════════════════════════════════════════════════════════
+// ── EQUALIZER (Web Audio API) ─────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// SC Widget is cross-origin, so we can't pipe its audio through
+// AudioContext directly. Instead we keep EQ as a visual/storage
+// feature and init AudioContext when user plays local audio or
+// when browser allows it. The EQ filter nodes are always ready
+// to chain to any connectable source.
+
+let _audioCtx = null, _eqBass = null, _eqMid = null, _eqTreble = null, _eqReady = false;
+
+function _initEQ() {
+  if (_eqReady) return;
+  try {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    _eqBass   = _audioCtx.createBiquadFilter(); _eqBass.type='lowshelf';  _eqBass.frequency.value=200;
+    _eqMid    = _audioCtx.createBiquadFilter(); _eqMid.type='peaking';    _eqMid.frequency.value=1000;  _eqMid.Q.value=1;
+    _eqTreble = _audioCtx.createBiquadFilter(); _eqTreble.type='highshelf'; _eqTreble.frequency.value=8000;
+    _eqBass.connect(_eqMid); _eqMid.connect(_eqTreble); _eqTreble.connect(_audioCtx.destination);
+    // Restore saved gains
+    ['bass','mid','treble'].forEach(b => {
+      const v = +S.load('eq_'+b, 0);
+      const node = b==='bass'?_eqBass : b==='mid'?_eqMid : _eqTreble;
+      node.gain.value = v;
+    });
+    _eqReady = true;
+  } catch(e) {}
+}
+
+function _setEQGain(band, val) {
+  S.save('eq_'+band, val);
+  if (!_eqReady) return;
+  const node = band==='bass'?_eqBass : band==='mid'?_eqMid : _eqTreble;
+  if (node) node.gain.setTargetAtTime(val, _audioCtx.currentTime, 0.02);
+}
+
+function _updateEQBar(band, val) {
+  const valEl = document.getElementById('eq-val-'+band);
+  const barEl = document.getElementById('eq-bar-'+band);
+  if (valEl) valEl.textContent = (val>0?'+':'')+val;
+  if (barEl) {
+    const halfH = 50; // 50% = centre
+    const pct   = Math.abs(val) / 12 * 50; // 0–50% height
+    if (val >= 0) {
+      barEl.style.bottom  = '50%';
+      barEl.style.height  = pct + '%';
+      barEl.classList.remove('negative');
+    } else {
+      barEl.style.bottom  = (50 - pct) + '%';
+      barEl.style.height  = pct + '%';
+      barEl.classList.add('negative');
+    }
+  }
+}
+
+// Restore UI from saved values
+['bass','mid','treble'].forEach(band => {
+  const saved = +S.load('eq_'+band, 0);
+  const el = document.getElementById('eq-'+band);
+  if (el) el.value = saved;
+  _updateEQBar(band, saved);
+
+  if (el) el.addEventListener('input', () => {
+    _initEQ();
+    const v = +el.value;
+    _updateEQBar(band, v);
+    _setEQGain(band, v);
+  });
+});
+
+document.getElementById('eq-reset').addEventListener('click', () => {
+  ['bass','mid','treble'].forEach(band => {
+    const el = document.getElementById('eq-'+band);
+    if (el) el.value = 0;
+    _updateEQBar(band, 0);
+    _setEQGain(band, 0);
+  });
+});
+
+// Resume AudioContext on any user tap (iOS)
+document.addEventListener('click', () => { if(_audioCtx && _audioCtx.state==='suspended') _audioCtx.resume(); });
+document.addEventListener('touchstart', () => { if(_audioCtx && _audioCtx.state==='suspended') _audioCtx.resume(); }, {passive:true});
+
+// ── PULSE UI WIRING ──────────────────────────────────────────
+_pulseEnabled  = S.load('pulse_on', true);
+_pulseStrength = +S.load('pulse_str', 5);
+
+const _pulseTog  = document.getElementById('pulse-toggle');
+const _pulseStr  = document.getElementById('pulse-strength');
+const _pulseStrV = document.getElementById('v-pulse');
+if(_pulseTog)  _pulseTog.checked      = _pulseEnabled;
+if(_pulseStr)  _pulseStr.value        = _pulseStrength;
+if(_pulseStrV) _pulseStrV.textContent = _pulseStrength;
+
+if(_pulseTog) _pulseTog.addEventListener('change', () => {
+  _pulseEnabled = _pulseTog.checked;
+  S.save('pulse_on', _pulseEnabled);
+  _pulseApply();
+});
+
+if(_pulseStr) _pulseStr.addEventListener('input', () => {
+  _pulseStrength = +_pulseStr.value;
+  _pulseStrV.textContent = _pulseStrength;
+  S.save('pulse_str', _pulseStrength);
+  _pulseApply();
+});
+
+// Re-hook when user loads a new SC playlist
+document.getElementById('pl-load').addEventListener('click', () => {
+  _pulseStop();
+});
+
+// ── НИК ──────────────────────────────────────────────────────
+const DEFAULT_NICK = '#aquafine';
+
+function applyNick(nick){
+  nick = nick.trim();
+  if(!nick) nick = DEFAULT_NICK;
+  // добавляем # если нет
+  if(!nick.startsWith('#') && !nick.startsWith('@')) nick = '#' + nick;
+  document.getElementById('username-display').textContent = nick;
+  document.getElementById('intro-tag').textContent = nick;
+  document.title = nick;
+  // синхронизируем поля
+  const si = document.getElementById('nick-input');
+  const ii = document.getElementById('intro-nick-input');
+  if(si) si.value = nick;
+  if(ii) ii.value = nick;
+  S.save('nick', nick);
+}
+
+// Загружаем сохранённый ник
+const savedNick = S.load('nick', null);
+if(savedNick) {
+  applyNick(savedNick);
+} else {
+  // первый запуск — показываем поле на интро
+  const wrap = document.getElementById('intro-nick-wrap');
+  if(wrap) wrap.style.display = 'flex';
+}
+
+// Кнопка сохранить в настройках
+document.getElementById('nick-save').addEventListener('click', () => {
+  const v = document.getElementById('nick-input').value;
+  applyNick(v);
+  // краткая анимация подтверждения
+  const btn = document.getElementById('nick-save');
+  const orig = btn.textContent;
+  btn.textContent = '✓';
+  btn.style.color = 'rgba(100,220,130,.9)';
+  setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1200);
+});
+
+// Enter в поле настроек
+document.getElementById('nick-input').addEventListener('keydown', e => {
+  if(e.key === 'Enter') document.getElementById('nick-save').click();
+});
+
+// focus стиль
+document.getElementById('nick-input').addEventListener('focus', e => e.target.style.borderColor = 'rgba(160,80,255,.55)');
+document.getElementById('nick-input').addEventListener('blur',  e => e.target.style.borderColor = 'rgba(160,80,255,.2)');
+
+// Клик по нику на карточке → открывает настройки и скроллит к полю
+document.getElementById('username-display').addEventListener('click', () => {
+  const panel = document.getElementById('s-panel');
+  if(!panel.classList.contains('open')) panel.classList.add('open');
+  setTimeout(() => {
+    const inp = document.getElementById('nick-input');
+    inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    inp.focus();
+    inp.select();
+  }, 120);
+});
+
+// Поле ника на интро — применяем при Enter или blur
+const introNickInp = document.getElementById('intro-nick-input');
+if(introNickInp){
+  introNickInp.addEventListener('keydown', e => {
+    if(e.key === 'Enter') { applyNick(introNickInp.value); introNickInp.blur(); }
+  });
+  introNickInp.addEventListener('input', () => {
+    // живой превью тега на интро
+    let v = introNickInp.value.trim();
+    if(v && !v.startsWith('#') && !v.startsWith('@')) v = '#' + v;
+    document.getElementById('intro-tag').textContent = v || DEFAULT_NICK;
+  });
+  // сохраняем при нажатии Enter-кнопки входа
+  document.getElementById('enter-btn').addEventListener('click', () => {
+    if(introNickInp.value.trim()) applyNick(introNickInp.value);
+  }, { capture: true });
+}
+
 
 // ── MUSIC NOTES RAIN ─────────────────────────────────────────
 function makeSkullRain(){
@@ -1131,4 +1917,3 @@ window.addEventListener('appinstalled', () => { document.getElementById('pwa-row
 </script>
 </body>
 </html>
-
