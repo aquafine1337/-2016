@@ -1424,12 +1424,10 @@ if(savedPl !== DEFAULT_PL) document.getElementById('pl-input').value = savedPl;
 // ── SPOTIFY ──────────────────────────────────────────────────
 const DEFAULT_SP = 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M';
 let spCurrentUrl = localStorage.getItem('sp_url') || DEFAULT_SP;
-
 function getSpotifyEmbedUrl(url){
   try {
     const u = new URL(url);
     if(!u.hostname.includes('spotify.com')) return null;
-    // Strip /intl-XX locale prefix
     const path = u.pathname.replace(/^\/intl-[a-z-]+/, '');
     return 'https://open.spotify.com/embed' + path + '?utm_source=generator&theme=0';
   } catch(e){ return null; }
@@ -1439,14 +1437,13 @@ function loadSpotify(url){
   const embedUrl = getSpotifyEmbedUrl(url);
   if(!embedUrl) return false;
   const iframe = document.getElementById('sp-widget');
-  // Must set src via attribute to trigger proper load
   iframe.setAttribute('src', embedUrl);
   localStorage.setItem('sp_url', url);
   spCurrentUrl = url;
   return true;
 }
 
-// Pre-load Spotify embed immediately
+// Pre-load Spotify embed
 loadSpotify(spCurrentUrl);
 
 // ── SOURCE SWITCHING ─────────────────────────────────────────
@@ -1454,6 +1451,11 @@ function switchSource(src){
   if(currentSource === src) return;
   if(currentSource === 'soundcloud' && widget){
     try { widget.pause(); } catch(e){}
+  }
+  if(currentSource === 'spotify'){
+    // postMessage pause — единственный способ остановить Spotify iframe на https://
+    const spIframe = document.getElementById('sp-widget');
+    try { spIframe.contentWindow.postMessage({command:'pause'},'https://open.spotify.com'); } catch(e){}
   }
   currentSource = src;
   S.save('source', src);
@@ -1501,10 +1503,10 @@ function switchSource(src){
   }
 }
 
-// Restore saved source
+// Restore saved source — если Spotify, ждём готовности контроллера
 const savedSource = S.load('source','soundcloud');
 if(savedSource === 'spotify') {
-  // defer so DOM is ready
+  // switchSource переключает UI сразу
   setTimeout(()=>switchSource('spotify'), 100);
 }
 
@@ -1925,4 +1927,3 @@ window.addEventListener('appinstalled', () => { document.getElementById('pwa-row
 </script>
 </body>
 </html>
-
