@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>#aquafine</title>
 <meta name="theme-color" content="#a050ff">
 <meta name="mobile-web-app-capable" content="yes">
@@ -29,7 +29,7 @@ body {
   perspective:1200px;
   min-height:100dvh;
 }
-canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
+canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; will-change:contents; }
 #bg-overlay { position:fixed; inset:0; z-index:1; pointer-events:none; transition:background 2s; }
 #lightning  { position:fixed; inset:0; z-index:2; pointer-events:none; }
 
@@ -44,6 +44,7 @@ canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
   backdrop-filter: blur(28px);
   box-shadow: 0 32px 80px rgba(0,0,0,.75), inset 0 0 0 .5px rgba(255,255,255,.04);
   transform-style: preserve-3d;
+  will-change: transform;
 }
 
 /* ── BANNER ── */
@@ -221,18 +222,18 @@ input[type=range]::-webkit-slider-thumb {
 /* ── SOURCE SWITCHER ── */
 .source-row {
   display:flex; align-items:center; justify-content:center;
-  gap:8px; padding:0 clamp(16px,4vw,26px);
+  gap:6px; padding:0 clamp(12px,3vw,20px);
   margin-bottom: clamp(8px,1.5vw,12px);
 }
 .src-btn {
-  display:flex; align-items:center; gap:5px;
+  display:flex; align-items:center; gap:4px;
   background:rgba(255,255,255,.04);
   border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
-  border-radius:20px; padding:5px 13px;
+  border-radius:20px; padding:5px 10px;
   color:rgba(200,170,255,.45); font-size:10px;
   font-family:'Inter',sans-serif; cursor:pointer;
   transition:all .2s; letter-spacing:.04em; flex:1; justify-content:center;
-  max-width:130px;
+  max-width:160px;
 }
 .src-btn svg { flex-shrink:0; }
 .src-btn:hover { background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.12); color:rgba(200,170,255,.85); }
@@ -248,6 +249,7 @@ input[type=range]::-webkit-slider-thumb {
   color:#1ED760;
 }
 .src-btn[data-src="spotify"].active svg { color:#1ED760; }
+
 
 /* ── SETTINGS TOGGLE ── */
 .settings-row { display:flex; justify-content:center; padding-bottom:6px; }
@@ -600,6 +602,54 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
   background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
   pointer-events:none; z-index:1;
 }
+
+/* ── PC LARGE SCREEN ── */
+@media (min-width: 768px) {
+  :root { --card-w: min(460px, 90vw); }
+  .settings-panel { max-height: 60vh; }
+  .btn { width: clamp(40px,3.5vw,50px); height: clamp(40px,3.5vw,50px); }
+  .btn-play { width: clamp(50px,4vw,58px); height: clamp(50px,4vw,58px); }
+}
+/* ── ULTRA-WIDE ── */
+@media (min-width: 1400px) {
+  :root { --card-w: min(500px, 35vw); }
+}
+/* ── MOBILE SAFE AREA (notch support) ── */
+@supports (padding: max(0px)) {
+  body { padding-bottom: env(safe-area-inset-bottom); }
+}
+/* ── MOBILE: bigger tap targets ── */
+@media (max-width: 480px) {
+  .btn { min-width: 42px; min-height: 42px; }
+  .btn-play { min-width: 52px; min-height: 52px; }
+  .src-btn { padding: 7px 8px; font-size: 9px; }
+  .vol-val { display: none; }
+  input[type=range] { height: 4px; }
+  input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; }
+  .settings-pill { padding: 7px 18px; }
+  .track-title { font-size: clamp(11px,3vw,14px); }
+  /* Larger click area for progress bar on mobile */
+  .pbar-bg { height: 6px; margin: 4px 0; }
+  .pbar-fill::after { width: 16px; height: 16px; right: -8px; top: -5px; }
+}
+/* ── KEYBOARD / FOCUS visible on PC ── */
+@media (hover: hover) {
+  .btn:focus-visible, .src-btn:focus-visible, .settings-pill:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+/* ── SCROLLBAR THIN on PC ── */
+@media (min-width: 768px) {
+  .settings-panel { scrollbar-width: thin; scrollbar-color: rgba(160,80,255,.3) transparent; }
+  .settings-panel::-webkit-scrollbar { display: block; width: 4px; }
+  .settings-panel::-webkit-scrollbar-track { background: transparent; }
+  .settings-panel::-webkit-scrollbar-thumb { background: rgba(160,80,255,.3); border-radius: 2px; }
+}
+/* ── PREVENT TEXT SELECT on card ── */
+.card { user-select: none; -webkit-user-select: none; }
+/* ── SMOOTH SCROLL in settings ── */
+.settings-panel { scroll-behavior: smooth; }
 </style>
 </head>
 <body>
@@ -703,7 +753,7 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
    <input type="range" id="vol-range" min="0" max="100" value="80">
    <span class="vol-val" id="vol-val">80</span>
   </div>
-  <div id="sp-vol-note" style="display:none;text-align:center;font-size:9px;color:rgba(30,215,96,.45);padding:0 16px 6px;letter-spacing:.04em;">громкость — в плеере Spotify ниже</div>
+  <div id="sp-vol-note" style="display:none;text-align:center;font-size:9px;color:rgba(30,215,96,.45);padding:0 16px 6px;letter-spacing:.04em;">▶ кнопка play работает · громкость — в плеере Spotify</div>
 
   <!-- SOURCE SWITCHER -->
   <div class="source-row">
@@ -711,6 +761,7 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M1.175 12.225c-.056 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.045.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.05-.1-.1-.1zm1.167-.45c-.072 0-.124.055-.132.127l-.2 2.577.2 2.476c.008.07.06.127.132.127.073 0 .124-.057.132-.127l.228-2.476-.228-2.577c-.008-.072-.059-.127-.132-.127zm1.2-.195c-.088 0-.154.067-.162.155l-.172 2.772.172 2.634c.008.087.074.154.162.154.09 0 .155-.067.163-.154l.198-2.634-.198-2.772c-.008-.088-.073-.155-.163-.155zm1.206-.047c-.105 0-.186.082-.192.187l-.142 2.819.142 2.668c.006.105.087.187.192.187.104 0 .186-.082.193-.187l.16-2.668-.16-2.819c-.007-.105-.089-.187-.193-.187zm1.23.01c-.12 0-.215.096-.22.217l-.11 2.809.11 2.671c.005.121.1.217.22.217.12 0 .215-.096.22-.217l.125-2.671-.125-2.809c-.005-.121-.1-.217-.22-.217zm1.2-.096c-.135 0-.243.108-.247.244l-.08 2.905.08 2.666c.004.136.112.244.247.244.135 0 .243-.108.247-.244l.09-2.666-.09-2.905c-.004-.136-.112-.244-.247-.244zm1.23.163c-.15 0-.27.12-.273.27l-.05 2.742.05 2.652c.003.15.123.27.273.27.15 0 .27-.12.273-.27l.056-2.652-.056-2.742c-.003-.15-.123-.27-.273-.27zM11.5 9.1c-.165 0-.297.133-.3.298l-.02 3.051.02 2.636c.003.165.135.298.3.298.165 0 .297-.133.3-.298l.022-2.636-.022-3.051c-.003-.165-.135-.298-.3-.298zm1.256-.383c-.18 0-.325.145-.327.325l0 3.434 0 2.62c.002.18.147.325.327.325.18 0 .325-.145.327-.325l0-2.62 0-3.434c-.002-.18-.147-.325-.327-.325zm9.544 3.716c-.467 0-.91.1-1.31.276-.27-3.07-2.82-5.46-5.96-5.46-1.07 0-2.07.3-2.92.82v10.32h10.19c1.38 0 2.5-1.12 2.5-2.5 0-1.38-1.12-2.5-2.5-2.5v.097z"/></svg>
     SoundCloud
    </button>
+
    <button class="src-btn" data-src="spotify" id="src-sp">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
     Spotify
@@ -747,9 +798,9 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
      <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><text x="3" y="16" font-size="11" fill="currentColor" stroke="none" font-family="monospace">01</text></svg>
      цифры
     </button>
-    <button class="wx-btn" data-wx="waterfall">
-     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v10m0 0c0 4-4 6-4 10m4-10c0 4 4 6 4 10M8 6H4m16 0h-4"/></svg>
-     водопад
+    <button class="wx-btn" data-wx="ocean">
+     <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/><path d="M2 17c2-3 4-3 6 0s4 3 6 0 4-3 6 0" opacity=".5"/></svg>
+     океан
     </button>
     <button class="wx-btn" data-wx="rain">
      <svg class="wx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="16" y1="19" x2="16" y2="21"/></svg>
@@ -1043,6 +1094,8 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
    </iframe>
   </div>
 
+
+
  </div><!-- /card -->
 </div><!-- /scene -->
 
@@ -1062,14 +1115,18 @@ let W,H, wx='digits', fR=160,fG=80,fB=255, intensV=5, spdV=5, parts=[];
 
 function h2r(hex){ return {r:parseInt(hex.slice(1,3),16),g:parseInt(hex.slice(3,5),16),b:parseInt(hex.slice(5,7),16)}; }
 
+let _resizeTimer=null;
 function rsz(){ W=cv.width=innerWidth; H=cv.height=innerHeight; init(); }
-rsz(); addEventListener('resize', rsz);
+rsz(); addEventListener('resize', ()=>{ clearTimeout(_resizeTimer); _resizeTimer=setTimeout(rsz,150); });
 
 function init(){
   parts=[];
-  if(wx==='digits'||wx==='waterfall'){
+  if(wx==='digits'){
     const sp=14, n=Math.floor(W/sp);
     for(let i=0;i<n;i++) parts.push({x:i*sp,y:Math.random()*-H,spd:(Math.random()*1.5+.5)*(spdV/5),a:Math.random()*.5+.15,len:~~(Math.random()*22+8)});
+  } else if(wx==='ocean'){
+    // ocean is fully animated in frame(), nothing to pre-init
+    ctx.clearRect(0,0,W,H);
   } else if(wx==='rain'||wx==='storm'){
     const n=~~(500*(intensV/5)*(wx==='storm'?1.4:1));
     for(let i=0;i<n;i++) parts.push({x:Math.random()*W,y:Math.random()*H,vy:(Math.random()*8+6)*(spdV/5),vx:-1.5,len:~~(Math.random()*18+8),a:Math.random()*.4+.15});
@@ -1101,7 +1158,7 @@ function lt(){
 }
 
 function frame(){
-  if(wx==='digits'||wx==='waterfall'){
+  if(wx==='digits'){
     ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,W,H);
     ctx.font='14px monospace';
     for(let p of parts){
@@ -1115,10 +1172,36 @@ function frame(){
       p.y+=p.spd*(spdV/5);
       if(p.y-p.len*14>H){ p.y=Math.random()*-100-50; p.spd=(Math.random()*1.5+.5)*(spdV/5); p.a=Math.random()*.5+.15; p.len=~~(Math.random()*22+8); }
     }
-    if(wx==='waterfall'){
-      const g=ctx.createLinearGradient(0,H*.65,0,H);
-      g.addColorStop(0,`rgba(${fR},${fG},${fB},0)`); g.addColorStop(1,`rgba(${fR},${fG},${fB},.05)`);
-      ctx.fillStyle=g; ctx.fillRect(0,H*.65,W,H*.35);
+  } else if(wx==='ocean'){
+    ctx.fillStyle='rgba(0,0,0,.04)'; ctx.fillRect(0,0,W,H);
+    const t=Date.now()*0.001*(spdV/5);
+    const numWaves=3+~~(intensV/3);
+    for(let w=0;w<numWaves;w++){
+      const phase=w/numWaves*Math.PI*2;
+      const yBase=H*(.3+w*.12);
+      const amp=20+w*8+Math.sin(t*.7+w)*8;
+      const freq=0.012-w*.001;
+      const alpha=(0.18-w*.03)*((intensV/10)*.7+.3);
+      ctx.beginPath();
+      ctx.moveTo(0,yBase);
+      for(let x=0;x<=W;x+=4){
+        const y=yBase+Math.sin(x*freq+t*(1.2-w*.2)+phase)*amp+Math.sin(x*freq*.5+t*.7+phase)*amp*.4;
+        ctx.lineTo(x,y);
+      }
+      ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath();
+      const g=ctx.createLinearGradient(0,yBase-amp,0,yBase+amp*2);
+      g.addColorStop(0,`rgba(${fR},${fG},${fB},${alpha*1.4})`);
+      g.addColorStop(.5,`rgba(${fR},${fG},${fB},${alpha*.8})`);
+      g.addColorStop(1,`rgba(${fR},${fG},${fB},0)`);
+      ctx.fillStyle=g; ctx.fill();
+      // foam crest
+      ctx.beginPath();
+      for(let x=0;x<=W;x+=4){
+        const y=yBase+Math.sin(x*freq+t*(1.2-w*.2)+phase)*amp+Math.sin(x*freq*.5+t*.7+phase)*amp*.4;
+        if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.strokeStyle=`rgba(${fR},${fG},${fB},${alpha*2.2})`;
+      ctx.lineWidth=1.5; ctx.stroke();
     }
   } else if(wx==='rain'||wx==='storm'){
     ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,W,H);
@@ -1201,7 +1284,7 @@ document.querySelectorAll('.wx-btn').forEach(b=>b.addEventListener('click',()=>{
   ctx.clearRect(0,0,W,H); init();
   S.save('wx',wx);
   const ov=document.getElementById('bg-overlay');
-  ov.style.background=wx==='fog'?'rgba(20,20,30,.38)':wx==='storm'?'rgba(5,5,15,.42)':'transparent';
+  ov.style.background=wx==='fog'?'rgba(20,20,30,.38)':wx==='storm'?'rgba(5,5,15,.42)':wx==='ocean'?'rgba(0,8,20,.35)':'transparent';
 }));
 
 // Accent
@@ -1236,7 +1319,7 @@ function applySettings(){
   document.querySelectorAll('.wx-btn').forEach(b=>{ b.classList.toggle('on', b.dataset.wx===wx); });
   // overlay
   const ov=document.getElementById('bg-overlay');
-  ov.style.background=wx==='fog'?'rgba(20,20,30,.38)':wx==='storm'?'rgba(5,5,15,.42)':'transparent';
+  ov.style.background=wx==='fog'?'rgba(20,20,30,.38)':wx==='storm'?'rgba(5,5,15,.42)':wx==='ocean'?'rgba(0,8,20,.35)':'transparent';
   init();
 }
 applySettings();
@@ -1404,16 +1487,47 @@ function bindWidget(w){
 }
 
 function loadPlaylist(url, onDone){
-  const iframe = document.getElementById('sc-widget');
-  const src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
-  // Destroy old widget binding first
-  if(widget){ try{ widget.unbind(SC.Widget.Events.READY); widget.unbind(SC.Widget.Events.PLAY); widget.unbind(SC.Widget.Events.PAUSE); widget.unbind(SC.Widget.Events.PLAY_PROGRESS); widget.unbind(SC.Widget.Events.FINISH); }catch(e){} widget=null; }
-  iframe.src = src;
-  iframe.onload = ()=>{
-    widget = SC.Widget(iframe);
-    bindWidget(widget);
-    if(onDone) setTimeout(onDone, 800);
-  };
+  if(!widget){
+    // First time: set iframe src and init widget
+    const iframe = document.getElementById('sc-widget');
+    const src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
+    iframe.src = src;
+    iframe.onload = ()=>{
+      widget = SC.Widget(iframe);
+      bindWidget(widget);
+      if(onDone) setTimeout(onDone, 800);
+    };
+  } else {
+    // Subsequent loads: use widget.load() — NO page reload needed
+    try {
+      widget.load(url, {
+        auto_play: false,
+        hide_related: true,
+        show_comments: false,
+        show_user: false,
+        show_reposts: false,
+        show_teaser: false,
+        visual: false
+      });
+      widget.bind(SC.Widget.Events.READY, ()=>{
+        statusEl.textContent='';
+        widget.setVolume(+volRange.value||80);
+        if(currentSource==='soundcloud') updateTrackInfo(widget);
+        if(onDone) onDone();
+      });
+    } catch(e){
+      // Fallback: reload iframe if widget.load fails
+      const iframe = document.getElementById('sc-widget');
+      const src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
+      widget = null;
+      iframe.src = src;
+      iframe.onload = ()=>{
+        widget = SC.Widget(iframe);
+        bindWidget(widget);
+        if(onDone) setTimeout(onDone, 800);
+      };
+    }
+  }
 }
 
 // Init SC with saved or default playlist
@@ -1453,10 +1567,10 @@ function switchSource(src){
     try { widget.pause(); } catch(e){}
   }
   if(currentSource === 'spotify'){
-    // postMessage pause — единственный способ остановить Spotify iframe на https://
     const spIframe = document.getElementById('sp-widget');
     try { spIframe.contentWindow.postMessage({command:'pause'},'https://open.spotify.com'); } catch(e){}
   }
+
   currentSource = src;
   S.save('source', src);
 
@@ -1466,9 +1580,13 @@ function switchSource(src){
   const volRow = document.getElementById('vol-row');
   const spVolNote = document.getElementById('sp-vol-note');
 
+  // Reset all active states
+  srcSc.classList.remove('active');
+  srcSp.classList.remove('active');
+  spWrap.style.display = 'none';
+
   if(src === 'soundcloud'){
-    srcSc.classList.add('active'); srcSp.classList.remove('active');
-    spWrap.style.display = 'none';
+    srcSc.classList.add('active');
     document.getElementById('btn-prev').style.display='';
     document.getElementById('btn-next').style.display='';
     document.getElementById('btn-play').style.display='';
@@ -1478,25 +1596,22 @@ function switchSource(src){
     spVolNote.style.display='none';
     resetProgress();
     statusEl.textContent='';
-    // Restore SC track info
     if(widget) updateTrackInfo(widget);
   } else {
-    srcSp.classList.add('active'); srcSc.classList.remove('active');
+    srcSp.classList.add('active');
     spWrap.style.display = 'block';
     document.getElementById('btn-prev').style.display='none';
     document.getElementById('btn-next').style.display='none';
-    document.getElementById('btn-play').style.display='none';
+    document.getElementById('btn-play').style.display='';
     document.getElementById('pbar-bg').style.pointerEvents='none';
     document.getElementById('pbar-bg').style.opacity='.3';
     resetProgress();
     setPlayIcon(false);
-    // Volume: grey out — Spotify embed doesn't accept external volume commands
+    _spPlaying = false;
     volRow.style.opacity='.3'; volRow.style.pointerEvents='none';
     spVolNote.style.display='block';
-    // Clear SC track info, show Spotify placeholder
     document.getElementById('title').textContent='Spotify';
     document.getElementById('artist').textContent='играет ниже';
-    // Spotify green cover placeholder
     document.getElementById('cover').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Crect width='92' height='92' fill='%23121212'/%3E%3Ccircle cx='46' cy='46' r='36' fill='%231ED760' opacity='.12'/%3E%3Cpath d='M46 18C30.536 18 18 30.536 18 46s12.536 28 28 28 28-12.536 28-28S61.464 18 46 18zm12.843 40.356a1.75 1.75 0 0 1-2.408.583c-6.593-4.029-14.9-4.941-24.678-2.708a1.75 1.75 0 1 1-.779-3.413c10.698-2.444 19.883-1.391 27.282 3.13a1.75 1.75 0 0 1 .583 2.408zm3.428-7.63a2.188 2.188 0 0 1-3.009.72c-7.545-4.637-19.047-5.98-27.972-3.27a2.188 2.188 0 1 1-1.27-4.187c10.196-3.095 22.878-1.596 31.531 3.728a2.188 2.188 0 0 1 .72 3.01zm.295-7.942c-9.047-5.374-23.975-5.87-32.6-3.247a2.625 2.625 0 1 1-1.525-5.022c9.91-3.009 26.388-2.427 36.79 3.757a2.625 2.625 0 1 1-2.665 4.512z' fill='%231ED760'/%3E%3C/svg%3E";
     document.getElementById('cover').style.background='#121212';
     statusEl.textContent='';
@@ -1506,7 +1621,6 @@ function switchSource(src){
 // Restore saved source — если Spotify, ждём готовности контроллера
 const savedSource = S.load('source','soundcloud');
 if(savedSource === 'spotify') {
-  // switchSource переключает UI сразу
   setTimeout(()=>switchSource('spotify'), 100);
 }
 
@@ -1516,6 +1630,7 @@ document.getElementById('src-sp').addEventListener('click', ()=>switchSource('sp
 // ── PLAYBACK CONTROLS ────────────────────────────────────────
 document.getElementById('btn-play').onclick=()=>{
   if(currentSource==='soundcloud' && widget) widget.toggle();
+  if(currentSource==='spotify') spToggle();
 };
 document.getElementById('btn-next').onclick=()=>{ if(widget) widget.next(); };
 document.getElementById('btn-prev').onclick=()=>{ if(widget) widget.prev(); };
@@ -1629,6 +1744,8 @@ document.getElementById('sp-paste-btn').addEventListener('click', async ()=>{
 });
 // Pre-fill SP input with saved URL
 if(spCurrentUrl !== DEFAULT_SP) document.getElementById('sp-input').value = spCurrentUrl;
+
+
 
 // ══════════════════════════════════════════════════════════════
 // ── EQUALIZER (Web Audio API) ─────────────────────────────────
@@ -1924,6 +2041,31 @@ document.getElementById('pwa-btn').addEventListener('click', async () => {
   deferredPrompt = null;
 });
 window.addEventListener('appinstalled', () => { document.getElementById('pwa-row').style.display = 'none'; });
+
+// ── KEYBOARD SHORTCUTS (PC) ─────────────────────────────────
+document.addEventListener('keydown', e => {
+  // Ignore if focus is in an input
+  if(document.activeElement.tagName === 'INPUT') return;
+  if(e.code === 'Space') {
+    e.preventDefault();
+    document.getElementById('btn-play').click();
+  } else if(e.code === 'ArrowRight' || e.code === 'KeyN') {
+    if(currentSource === 'soundcloud' && widget) widget.next();
+  } else if(e.code === 'ArrowLeft' || e.code === 'KeyP') {
+    if(currentSource === 'soundcloud' && widget) widget.prev();
+  } else if(e.code === 'ArrowUp') {
+    e.preventDefault();
+    const vr = document.getElementById('vol-range');
+    vr.value = Math.min(100, +vr.value + 5);
+    vr.dispatchEvent(new Event('input'));
+  } else if(e.code === 'ArrowDown') {
+    e.preventDefault();
+    const vr = document.getElementById('vol-range');
+    vr.value = Math.max(0, +vr.value - 5);
+    vr.dispatchEvent(new Event('input'));
+  }
+});
+
 </script>
 </body>
 </html>
