@@ -28,10 +28,12 @@ body {
   font-family:'Inter',sans-serif;
   perspective:1200px;
   min-height:100dvh;
+  transition: background 1.2s ease;
 }
-canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; will-change:contents; }
-#bg-overlay { position:fixed; inset:0; z-index:1; pointer-events:none; transition:background 2s; }
-#lightning  { position:fixed; inset:0; z-index:2; pointer-events:none; }
+canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:1; will-change:contents; }
+#bg-overlay { position:fixed; inset:0; z-index:2; pointer-events:none; transition:background 1.5s ease; }
+#bg-custom-img { position:fixed; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; display:none; opacity:0; transition:opacity 1.2s ease; pointer-events:none; }
+#lightning  { position:fixed; inset:0; z-index:3; pointer-events:none; }
 
 /* ── CARD ── */
 .scene { position:relative; z-index:10; transform-style:preserve-3d; }
@@ -45,7 +47,26 @@ canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; will-ch
   box-shadow: 0 32px 80px rgba(0,0,0,.75), inset 0 0 0 .5px rgba(255,255,255,.04);
   transform-style: preserve-3d;
   will-change: transform;
+  transition: background .6s ease, border-color .4s ease, width .4s ease;
 }
+/* Стеклянная карточка */
+.card.glass-card {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,.28) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  box-shadow:
+    0 32px 80px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.18),
+    inset 0 -1px 0 rgba(255,255,255,.06),
+    0 0 0 .5px rgba(255,255,255,.1) !important;
+}
+.card.glass-card .banner {
+  background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.02)) !important;
+}
+.card.glass-card .track-title { color: rgba(255,255,255,.92); }
+.card.glass-card .track-artist { color: rgba(255,255,255,.45); }
+.card.glass-card .s-section { border-bottom-color: rgba(255,255,255,.08); }
 
 /* ── BANNER ── */
 .banner {
@@ -129,7 +150,8 @@ canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; will-ch
   height: clamp(72px,16vw,92px);
   border-radius:14px; object-fit:cover;
   border:2px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.38);
-  background:#1a0a2e; transition:border-color .3s;
+  background:#1a0a2e;
+  transition:border-color .4s, box-shadow .5s, transform .3s;
   box-shadow: 0 8px 28px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
 }
 .cover-img.playing { animation:spin 12s linear infinite; border-radius:50%; }
@@ -156,7 +178,7 @@ canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; will-ch
 .pbar-fill {
   height:100%; width:0%; border-radius:2px;
   background:linear-gradient(90deg,var(--accent),var(--accent-light));
-  transition:width .5s linear; position:relative;
+  transition:width .6s cubic-bezier(.4,0,.2,1); position:relative;
 }
 .pbar-fill::after {
   content:''; position:absolute; right:-6px; top:-5px;
@@ -681,11 +703,13 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
 </div>
 
 <canvas id="bg"></canvas>
+<img id="bg-custom-img" src="" alt="">
 <div id="bg-overlay"></div>
 <div id="lightning"></div>
 
 <input type="file" id="up-banner" accept="image/*" style="display:none">
 <input type="file" id="up-avatar" accept="image/*" style="display:none">
+<input type="file" id="up-bg" accept="image/*" style="display:none">
 
 <div class="scene" id="scene">
  <div class="card" id="card">
@@ -881,6 +905,9 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
      <div class="swatch" data-bg="rgba(5,18,8,0.93)" style="background:rgba(5,18,8,0.97)"></div>
      <div class="swatch" data-bg="rgba(28,20,8,0.93)" style="background:rgba(28,20,8,0.97)"></div>
      <div class="swatch" data-bg="rgba(255,255,255,0.08)" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2)"></div>
+     <div class="swatch glass-swatch" data-bg="rgba(255,255,255,0.04)" data-glass="1" title="Стекло" style="background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.35);position:relative;overflow:hidden">
+      <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.7)">✦</span>
+     </div>
     </div>
    </div>
 
@@ -898,6 +925,27 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
      <div class="swatch" data-p="#040d08" style="background:#040d08"></div>
      <input type="color" id="cp-pick" value="#000000" style="width:26px;height:20px;border-radius:5px;border:2px solid rgba(255,255,255,.2);">
     </div>
+   </div>
+
+   <!-- BG IMAGE -->
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+    Фото на фон
+   </div>
+   <div class="s-row">
+    <span class="s-label">Своя картинка</span>
+    <button class="up-btn" id="up-bg-btn">
+     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+     Загрузить
+    </button>
+   </div>
+   <div class="s-row" id="bg-img-clear-row" style="display:none">
+    <span class="s-label" style="color:rgba(200,170,255,.4);font-size:10px">Фото установлено</span>
+    <button id="bg-img-clear" style="background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.25);border-radius:7px;padding:4px 11px;font-size:10px;font-family:Inter,sans-serif;color:rgba(255,120,120,.7);cursor:pointer;transition:all .2s">Убрать</button>
+   </div>
+   <div class="s-row">
+    <span class="s-label">Затемнение</span>
+    <div class="sl-row"><input type="range" id="bg-img-dim" min="0" max="95" value="55" step="5"><span class="sl-v" id="v-bgdim">55</span></div>
    </div>
 
    <!-- INTENSITY & SPEED -->
@@ -1114,6 +1162,7 @@ const ctx = cv.getContext('2d');
 let W,H, wx='digits', fR=160,fG=80,fB=255, intensV=5, spdV=5, parts=[];
 
 function h2r(hex){ return {r:parseInt(hex.slice(1,3),16),g:parseInt(hex.slice(3,5),16),b:parseInt(hex.slice(5,7),16)}; }
+function setPageBg(color){ document.body.style.background = color; }
 
 let _resizeTimer=null;
 function rsz(){ W=cv.width=innerWidth; H=cv.height=innerHeight; init(); }
@@ -1159,7 +1208,7 @@ function lt(){
 
 function frame(){
   if(wx==='digits'){
-    ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,W,H);
+    ctx.clearRect(0,0,W,H);
     ctx.font='14px monospace';
     for(let p of parts){
       for(let j=0;j<p.len;j++){
@@ -1173,7 +1222,7 @@ function frame(){
       if(p.y-p.len*14>H){ p.y=Math.random()*-100-50; p.spd=(Math.random()*1.5+.5)*(spdV/5); p.a=Math.random()*.5+.15; p.len=~~(Math.random()*22+8); }
     }
   } else if(wx==='ocean'){
-    ctx.fillStyle='rgba(0,0,0,.04)'; ctx.fillRect(0,0,W,H);
+    ctx.clearRect(0,0,W,H);
     const t=Date.now()*0.001*(spdV/5);
     const numWaves=3+~~(intensV/3);
     for(let w=0;w<numWaves;w++){
@@ -1204,7 +1253,7 @@ function frame(){
       ctx.lineWidth=1.5; ctx.stroke();
     }
   } else if(wx==='rain'||wx==='storm'){
-    ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,W,H);
+    ctx.clearRect(0,0,W,H);
     ctx.strokeStyle=`rgba(${fR},${fG},${fB},.32)`; ctx.lineWidth=wx==='storm'?1.2:.8;
     for(let p of parts){
       ctx.globalAlpha=p.a; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+p.vx*(p.len/8),p.y+p.len); ctx.stroke();
@@ -1213,7 +1262,7 @@ function frame(){
     }
     if(wx==='storm'){ ltTimer++; if(ltTimer>~~(60*(6-spdV*.5))&&Math.random()<.025){ lt(); ltTimer=0; } }
   } else if(wx==='wind'){
-    ctx.fillStyle='rgba(0,0,0,.04)'; ctx.fillRect(0,0,W,H);
+    ctx.clearRect(0,0,W,H);
     for(let p of parts){
       ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-p.len,p.y-p.vy*5);
       ctx.strokeStyle=`rgba(${fR},${fG},${fB},${p.a})`; ctx.lineWidth=.8; ctx.stroke();
@@ -1221,7 +1270,7 @@ function frame(){
       if(p.x>W+p.len){ p.x=-p.len; p.y=Math.random()*H; }
     }
   } else if(wx==='snow'){
-    ctx.fillStyle='rgba(0,0,0,.04)'; ctx.fillRect(0,0,W,H);
+    ctx.clearRect(0,0,W,H);
     for(let p of parts){
       p.wb+=p.wbs*(spdV/5); p.x+=Math.sin(p.wb)*.6+p.vx; p.y+=p.vy*(spdV/5);
       ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=`rgba(${fR},${fG},${fB},${p.a})`; ctx.fill();
@@ -1236,7 +1285,7 @@ function frame(){
       p.x+=p.vx; if(p.x>W+p.r) p.x=-p.r; if(p.x<-p.r) p.x=W+p.r;
     }
   } else if(wx==='stars'){
-    ctx.fillStyle='rgba(0,0,0,.12)'; ctx.fillRect(0,0,W,H);
+    ctx.clearRect(0,0,W,H);
     for(let p of parts){
       p.tw+=p.tws*(spdV/5);
       const a=p.ba*(.5+.5*Math.sin(p.tw));
@@ -1277,14 +1326,19 @@ addEventListener('touchend',()=>{ mX=0; mY=0; });
 // ── SETTINGS ────────────────────────────────────────────────
 document.getElementById('settings-btn').onclick=()=> document.getElementById('s-panel').classList.toggle('open');
 
+// Helper: get overlay bg for wx mode
+function getWxOverlay(mode){
+  return mode==='fog'?'rgba(20,20,30,.38)':mode==='storm'?'rgba(5,5,15,.42)':mode==='ocean'?'rgba(0,8,20,.35)':'transparent';
+}
+
 // Weather
 document.querySelectorAll('.wx-btn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.wx-btn').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); wx=b.dataset.wx;
   ctx.clearRect(0,0,W,H); init();
   S.save('wx',wx);
-  const ov=document.getElementById('bg-overlay');
-  ov.style.background=wx==='fog'?'rgba(20,20,30,.38)':wx==='storm'?'rgba(5,5,15,.42)':wx==='ocean'?'rgba(0,8,20,.35)':'transparent';
+  document.getElementById('bg-overlay').style.background = getWxOverlay(wx);
+  updateBgOverlayDim();
 }));
 
 // Accent
@@ -1301,10 +1355,12 @@ function applySettings(){
   const fall = S.load('fall','#a050ff');
   const fc = h2r(fall); fR=fc.r; fG=fc.g; fB=fc.b;
   const cbg = S.load('card_bg','rgba(14,10,22,0.93)');
+  const cgl = S.load('card_glass','0');
   document.getElementById('card').style.background = cbg;
   document.documentElement.style.setProperty('--card-bg', cbg);
+  if(cgl==='1') document.getElementById('card').classList.add('glass-card');
   const pbg = S.load('page_bg','#000');
-  document.body.style.background = pbg;
+  setPageBg(pbg);
   wx = S.load('wx','digits');
   intensV = S.load('int',5); document.getElementById('s-int').value=intensV; document.getElementById('v-int').textContent=intensV;
   spdV = S.load('spd',5); document.getElementById('s-spd').value=spdV; document.getElementById('v-spd').textContent=spdV;
@@ -1317,12 +1373,12 @@ function applySettings(){
   document.getElementById('v-bh').textContent = bh;
   // Mark active wx button
   document.querySelectorAll('.wx-btn').forEach(b=>{ b.classList.toggle('on', b.dataset.wx===wx); });
-  // overlay
-  const ov=document.getElementById('bg-overlay');
-  ov.style.background=wx==='fog'?'rgba(20,20,30,.38)':wx==='storm'?'rgba(5,5,15,.42)':wx==='ocean'?'rgba(0,8,20,.35)':'transparent';
+  // overlay (defer until getWxOverlay is defined — called after)
   init();
 }
 applySettings();
+// Apply overlay after helpers are defined
+(()=>{ document.getElementById('bg-overlay').style.background = getWxOverlay(wx); })();
 
 function setAccent(a,l){ const c=h2r(a); document.documentElement.style.setProperty('--accent',a); document.documentElement.style.setProperty('--accent-light',l||a); ['r','g','b'].forEach((k,i)=>document.documentElement.style.setProperty(`--accent-${k}`,Object.values(c)[i])); document.getElementById('card').style.borderColor=`rgba(${c.r},${c.g},${c.b},.25)`; document.getElementById('blob1').style.background=a; }
 document.querySelectorAll('[data-a]').forEach(d=>d.addEventListener('click',()=>{ document.querySelectorAll('[data-a]').forEach(x=>x.classList.remove('on')); d.classList.add('on'); setAccent(d.dataset.a,d.dataset.l); S.save('accent',d.dataset.a); S.save('accent_l',d.dataset.l); }));
@@ -1333,11 +1389,25 @@ document.querySelectorAll('[data-f]').forEach(d=>d.addEventListener('click',()=>
 document.getElementById('cf-pick').addEventListener('input',e=>{ const c=h2r(e.target.value); fR=c.r;fG=c.g;fB=c.b; S.save('fall',e.target.value); document.querySelectorAll('[data-f]').forEach(x=>x.classList.remove('on')); });
 
 // Card bg
-document.querySelectorAll('[data-bg]').forEach(s=>s.addEventListener('click',()=>{ document.querySelectorAll('[data-bg]').forEach(x=>x.classList.remove('on')); s.classList.add('on'); document.getElementById('card').style.background=s.dataset.bg; document.documentElement.style.setProperty('--card-bg',s.dataset.bg); S.save('card_bg',s.dataset.bg); }));
+document.querySelectorAll('[data-bg]').forEach(s=>s.addEventListener('click',()=>{
+  document.querySelectorAll('[data-bg]').forEach(x=>x.classList.remove('on'));
+  s.classList.add('on');
+  const card = document.getElementById('card');
+  if(s.dataset.glass){
+    card.classList.add('glass-card');
+    S.save('card_glass','1');
+  } else {
+    card.classList.remove('glass-card');
+    S.save('card_glass','0');
+  }
+  card.style.background=s.dataset.bg;
+  document.documentElement.style.setProperty('--card-bg',s.dataset.bg);
+  S.save('card_bg',s.dataset.bg);
+}));
 
 // Page bg
-document.querySelectorAll('[data-p]').forEach(s=>s.addEventListener('click',()=>{ document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); s.classList.add('on'); document.body.style.background=s.dataset.p; S.save('page_bg',s.dataset.p); }));
-document.getElementById('cp-pick').addEventListener('input',e=>{ document.body.style.background=e.target.value; S.save('page_bg',e.target.value); document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); });
+document.querySelectorAll('[data-p]').forEach(s=>s.addEventListener('click',()=>{ document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); s.classList.add('on'); setPageBg(s.dataset.p); S.save('page_bg',s.dataset.p); }));
+document.getElementById('cp-pick').addEventListener('input',e=>{ setPageBg(e.target.value); S.save('page_bg',e.target.value); document.querySelectorAll('[data-p]').forEach(x=>x.classList.remove('on')); });
 
 // Intensity / Speed
 document.getElementById('s-int').addEventListener('input',e=>{ intensV=+e.target.value; document.getElementById('v-int').textContent=intensV; S.save('int',intensV); init(); });
@@ -1394,12 +1464,66 @@ document.getElementById('up-avatar').addEventListener('change',e=>{
   });
 });
 
-// Restore saved banner/avatar
+// ── BG IMAGE ─────────────────────────────────────────────────
+function updateBgOverlayDim(){
+  const dim = +S.load('bg_dim', 55);
+  const bgImgEl = document.getElementById('bg-custom-img');
+  const hasImg = bgImgEl.style.display === 'block';
+  if(hasImg){
+    // Show canvas partially through overlay
+    document.getElementById('bg-overlay').style.background = `rgba(0,0,0,${dim/100})`;
+  } else {
+    document.getElementById('bg-overlay').style.background = getWxOverlay(wx);
+  }
+}
+
+function applyBgImage(b64){
+  const el = document.getElementById('bg-custom-img');
+  el.src = b64;
+  el.style.display = 'block';
+  // Fade in
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ el.style.opacity = '1'; }); });
+  document.getElementById('bg-img-clear-row').style.display = 'flex';
+  updateBgOverlayDim();
+  // Canvas stays visible — particles draw over the image
+}
+
+function removeBgImage(){
+  const el = document.getElementById('bg-custom-img');
+  el.style.opacity = '0';
+  setTimeout(()=>{ el.style.display = 'none'; el.src = ''; }, 1200);
+  localStorage.removeItem('pl_bg_img');
+  document.getElementById('bg-img-clear-row').style.display = 'none';
+
+  updateBgOverlayDim();
+}
+
+document.getElementById('up-bg-btn').addEventListener('click', ()=>document.getElementById('up-bg').click());
+document.getElementById('up-bg').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return;
+  fileToBase64(f, b64=>{
+    try{ localStorage.setItem('pl_bg_img', b64); }catch(e){}
+    applyBgImage(b64);
+  });
+  e.target.value = '';
+});
+document.getElementById('bg-img-clear').addEventListener('click', removeBgImage);
+document.getElementById('bg-img-dim').addEventListener('input', e=>{
+  S.save('bg_dim', +e.target.value);
+  document.getElementById('v-bgdim').textContent = e.target.value;
+  updateBgOverlayDim();
+});
+// Restore dim slider
+(()=>{ const d = +S.load('bg_dim',55); document.getElementById('bg-img-dim').value=d; document.getElementById('v-bgdim').textContent=d; })();
+
+// Restore saved banner/avatar/bg
 (()=>{
   const b=localStorage.getItem('pl_banner');
   if(b){ const img=document.getElementById('banner-img'); img.src=b; img.style.display='block'; document.getElementById('banner-ph').style.display='none'; }
   const a=localStorage.getItem('pl_avatar');
   if(a){ document.getElementById('avatar-img').innerHTML=`<img src="${a}" style="width:100%;height:100%;object-fit:cover;">`; }
+  const bgImg = localStorage.getItem('pl_bg_img');
+  if(bgImg){ applyBgImage(bgImg); }
 })();
 
 // ── AUDIO SOURCE MANAGER ─────────────────────────────────────
@@ -1486,48 +1610,70 @@ function bindWidget(w){
   });
 }
 
+function _scIframeSrc(url){
+  return `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
+}
+
 function loadPlaylist(url, onDone){
-  if(!widget){
-    // First time: set iframe src and init widget
-    const iframe = document.getElementById('sc-widget');
-    const src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
-    iframe.src = src;
-    iframe.onload = ()=>{
-      widget = SC.Widget(iframe);
-      bindWidget(widget);
-      if(onDone) setTimeout(onDone, 800);
-    };
-  } else {
-    // Subsequent loads: use widget.load() — NO page reload needed
-    try {
-      widget.load(url, {
-        auto_play: false,
-        hide_related: true,
-        show_comments: false,
-        show_user: false,
-        show_reposts: false,
-        show_teaser: false,
-        visual: false
-      });
-      widget.bind(SC.Widget.Events.READY, ()=>{
-        statusEl.textContent='';
-        widget.setVolume(+volRange.value||80);
-        if(currentSource==='soundcloud') updateTrackInfo(widget);
-        if(onDone) onDone();
-      });
-    } catch(e){
-      // Fallback: reload iframe if widget.load fails
-      const iframe = document.getElementById('sc-widget');
-      const src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
-      widget = null;
-      iframe.src = src;
-      iframe.onload = ()=>{
-        widget = SC.Widget(iframe);
-        bindWidget(widget);
-        if(onDone) setTimeout(onDone, 800);
-      };
-    }
+  const iframe = document.getElementById('sc-widget');
+  // Always reload the iframe — most reliable on mobile
+  widget = null;
+  iframe.src = 'about:blank';
+  statusEl.textContent = 'Загрузка...';
+
+  let _loadDone = false;
+  let _timeoutId = null;
+
+  function _finish(){
+    if(_loadDone) return;
+    _loadDone = true;
+    clearTimeout(_timeoutId);
+    statusEl.textContent = '';
+    if(onDone) onDone();
   }
+
+  // Timeout guard: if READY never fires within 12s, still resolve
+  _timeoutId = setTimeout(()=>{
+    if(!_loadDone){
+      _loadDone = true;
+      statusEl.textContent = '';
+      // Try to get track info anyway
+      if(widget && currentSource==='soundcloud') updateTrackInfo(widget);
+      if(onDone) onDone();
+    }
+  }, 12000);
+
+  requestAnimationFrame(()=>{
+    iframe.src = _scIframeSrc(url);
+    iframe.onload = ()=>{
+      try {
+        widget = SC.Widget(iframe);
+        // Override bindWidget READY to also call _finish
+        bindWidget(widget);
+        widget.bind(SC.Widget.Events.READY, ()=>{
+          widget.setVolume(+volRange.value||80);
+          if(currentSource==='soundcloud') updateTrackInfo(widget);
+          _finish();
+        });
+      } catch(e){
+        _finish();
+      }
+    };
+    // Fallback if iframe.onload never fires (some mobile browsers)
+    setTimeout(()=>{
+      if(!_loadDone && !widget){
+        try {
+          widget = SC.Widget(iframe);
+          bindWidget(widget);
+          widget.bind(SC.Widget.Events.READY, ()=>{
+            widget.setVolume(+volRange.value||80);
+            if(currentSource==='soundcloud') updateTrackInfo(widget);
+            _finish();
+          });
+        } catch(e){ _finish(); }
+      }
+    }, 3000);
+  });
 }
 
 // Init SC with saved or default playlist
@@ -1651,12 +1797,17 @@ volRange.addEventListener('input',()=>{
 function tryLoadPlaylist(){
   const url = document.getElementById('pl-input').value.trim();
   const msg = document.getElementById('pl-msg');
+  const btn = document.getElementById('pl-load');
   if(!url){ msg.textContent='Вставь ссылку!'; msg.style.color='rgba(255,100,100,.7)'; return; }
   if(!url.includes('soundcloud.com')){ msg.textContent='Это не ссылка SoundCloud'; msg.style.color='rgba(255,100,100,.7)'; return; }
-  msg.textContent='Загружаю...'; msg.style.color='rgba(160,80,255,.7)';
+  msg.textContent='⏳ Загружаю...'; msg.style.color='rgba(160,80,255,.7)';
+  btn.textContent='Загрузка...'; btn.style.opacity='.6'; btn.disabled=true;
+  // Blur input to hide mobile keyboard during load
+  document.getElementById('pl-input').blur();
   loadPlaylist(url, ()=>{
     localStorage.setItem('pl_url', url);
     msg.textContent='✓ Плейлист загружен!'; msg.style.color='rgba(100,220,130,.8)';
+    btn.textContent='Загрузить плейлист'; btn.style.opacity='1'; btn.disabled=false;
     setTimeout(()=>msg.textContent='', 3000);
   });
 }
@@ -1957,7 +2108,7 @@ function makeSkullRain(){
 }
 
 function drawSkulls(){
-  ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,W,H);
+  ctx.clearRect(0,0,W,H);
   for(let p of parts){
     ctx.save();
     ctx.translate(p.x,p.y);
