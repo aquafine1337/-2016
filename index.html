@@ -30,10 +30,12 @@ body {
   min-height:100dvh;
   transition: background 1.2s ease;
 }
-canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:1; will-change:contents; }
-#bg-overlay { position:fixed; inset:0; z-index:2; pointer-events:none; transition:background 1.5s ease; }
+canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:2; will-change:contents; }
+#bg-overlay { position:fixed; inset:0; z-index:1; pointer-events:none; transition:background 1.5s ease; }
 #bg-custom-img { position:fixed; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; display:none; opacity:0; transition:opacity 1.2s ease; pointer-events:none; }
-#lightning  { position:fixed; inset:0; z-index:3; pointer-events:none; }
+/* dim overlay sits between photo and canvas so particles are always visible */
+#bg-dim-overlay { position:fixed; inset:0; z-index:1; pointer-events:none; background:transparent; transition:background .3s; }
+#lightning  { position:fixed; inset:0; z-index:4; pointer-events:none; }
 
 /* ── CARD ── */
 .scene { position:relative; z-index:10; transform-style:preserve-3d; }
@@ -704,6 +706,7 @@ input[type=color] { cursor:pointer; border:none; padding:0; background:none; }
 
 <canvas id="bg"></canvas>
 <img id="bg-custom-img" src="" alt="">
+<div id="bg-dim-overlay"></div>
 <div id="bg-overlay"></div>
 <div id="lightning"></div>
 
@@ -1470,9 +1473,11 @@ function updateBgOverlayDim(){
   const bgImgEl = document.getElementById('bg-custom-img');
   const hasImg = bgImgEl.style.display === 'block';
   if(hasImg){
-    // Show canvas partially through overlay
-    document.getElementById('bg-overlay').style.background = `rgba(0,0,0,${dim/100})`;
+    // Dim overlay sits between photo and canvas — particles always fully visible
+    document.getElementById('bg-dim-overlay').style.background = `rgba(0,0,0,${dim/100})`;
+    document.getElementById('bg-overlay').style.background = 'transparent';
   } else {
+    document.getElementById('bg-dim-overlay').style.background = 'transparent';
     document.getElementById('bg-overlay').style.background = getWxOverlay(wx);
   }
 }
@@ -1582,16 +1587,22 @@ function _pulseStart(){ _pulseIsPlaying = true;  _pulseApply(); }
 function _pulseStop () { _pulseIsPlaying = false; _pulseApply(); }
 
 
+let _cachedDuration = 0;
+
 function bindWidget(w){
   w.bind(SC.Widget.Events.READY,()=>{
     statusEl.textContent='';
     w.setVolume(+volRange.value||80);
+    _cachedDuration = 0;
     if(currentSource==='soundcloud') updateTrackInfo(w);
   });
   w.bind(SC.Widget.Events.PLAY,()=>{
     if(currentSource!=='soundcloud') return;
     setPlayIcon(true);
     updateTrackInfo(w);
+    _cachedDuration = 0;
+    // fetch duration once on play
+    w.getDuration(dur=>{ _cachedDuration = dur; });
     _pulseStart();
   });
   w.bind(SC.Widget.Events.PAUSE,()=>{
@@ -1602,10 +1613,19 @@ function bindWidget(w){
   w.bind(SC.Widget.Events.PLAY_PROGRESS,d=>{
     if(currentSource!=='soundcloud') return;
     document.getElementById('cur').textContent=fmt(d.currentPosition);
-    w.getDuration(dur=>{ if(dur>0){ document.getElementById('dur').textContent=fmt(dur); document.getElementById('pbar-fill').style.width=(d.currentPosition/dur*100)+'%'; } });
+    // use relativePosition if duration not yet cached
+    if(_cachedDuration > 0){
+      document.getElementById('dur').textContent=fmt(_cachedDuration);
+      document.getElementById('pbar-fill').style.width=(d.currentPosition/_cachedDuration*100)+'%';
+    } else if(d.relativePosition !== undefined){
+      document.getElementById('pbar-fill').style.width=(d.relativePosition*100)+'%';
+      // try to get duration once
+      w.getDuration(dur=>{ if(dur>0){ _cachedDuration=dur; document.getElementById('dur').textContent=fmt(dur); } });
+    }
   });
   w.bind(SC.Widget.Events.FINISH,()=>{
     if(currentSource==='soundcloud') w.next();
+    _cachedDuration = 0;
     _pulseStop();
   });
 }
@@ -1618,11 +1638,13 @@ function loadPlaylist(url, onDone){
   const iframe = document.getElementById('sc-widget');
   // Always reload the iframe — most reliable on mobile
   widget = null;
+  _cachedDuration = 0;
   iframe.src = 'about:blank';
   statusEl.textContent = 'Загрузка...';
 
   let _loadDone = false;
   let _timeoutId = null;
+  let _bound = false;
 
   function _finish(){
     if(_loadDone) return;
@@ -1632,12 +1654,27 @@ function loadPlaylist(url, onDone){
     if(onDone) onDone();
   }
 
+  function _tryBind(){
+    if(_bound) return;
+    _bound = true;
+    try {
+      widget = SC.Widget(iframe);
+      bindWidget(widget);
+      widget.bind(SC.Widget.Events.READY, ()=>{
+        widget.setVolume(+volRange.value||80);
+        if(currentSource==='soundcloud') updateTrackInfo(widget);
+        _finish();
+      });
+    } catch(e){
+      _finish();
+    }
+  }
+
   // Timeout guard: if READY never fires within 12s, still resolve
   _timeoutId = setTimeout(()=>{
     if(!_loadDone){
       _loadDone = true;
       statusEl.textContent = '';
-      // Try to get track info anyway
       if(widget && currentSource==='soundcloud') updateTrackInfo(widget);
       if(onDone) onDone();
     }
@@ -1645,34 +1682,9 @@ function loadPlaylist(url, onDone){
 
   requestAnimationFrame(()=>{
     iframe.src = _scIframeSrc(url);
-    iframe.onload = ()=>{
-      try {
-        widget = SC.Widget(iframe);
-        // Override bindWidget READY to also call _finish
-        bindWidget(widget);
-        widget.bind(SC.Widget.Events.READY, ()=>{
-          widget.setVolume(+volRange.value||80);
-          if(currentSource==='soundcloud') updateTrackInfo(widget);
-          _finish();
-        });
-      } catch(e){
-        _finish();
-      }
-    };
+    iframe.onload = ()=>{ _tryBind(); };
     // Fallback if iframe.onload never fires (some mobile browsers)
-    setTimeout(()=>{
-      if(!_loadDone && !widget){
-        try {
-          widget = SC.Widget(iframe);
-          bindWidget(widget);
-          widget.bind(SC.Widget.Events.READY, ()=>{
-            widget.setVolume(+volRange.value||80);
-            if(currentSource==='soundcloud') updateTrackInfo(widget);
-            _finish();
-          });
-        } catch(e){ _finish(); }
-      }
-    }, 3000);
+    setTimeout(()=>{ if(!_loadDone && !_bound) _tryBind(); }, 3000);
   });
 }
 
