@@ -359,29 +359,109 @@ input[type=color]{cursor:pointer;border:none;padding:0;background:none}
 .loading{text-align:center;font-size:11px;color:rgba(200,170,255,.35);padding:4px 0 0}
 
 /* ── EQUALIZER ── */
-.eq-bands{display:flex;gap:10px;align-items:stretch;margin-top:6px;margin-bottom:4px}
-.eq-band{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
-.eq-band-track{width:100%;height:72px;position:relative;display:flex;align-items:center;justify-content:center}
+.eq-bands{
+  display:flex;gap:8px;align-items:stretch;
+  margin-top:8px;margin-bottom:8px;
+  background:rgba(0,0,0,.25);
+  border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.12);
+  border-radius:16px;
+  padding:14px 10px 12px;
+}
+.eq-band{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.eq-band-track{
+  width:100%;height:90px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+/* Cross-browser vertical slider: rotate a horizontal slider */
 .eq-band input[type=range].eq-slider{
-  writing-mode:vertical-lr;direction:rtl;
-  width:24px;height:68px;
-  background:transparent;outline:none;cursor:pointer;
-  flex:none;position:relative;z-index:2;
   -webkit-appearance:none;appearance:none;
+  width:80px;height:5px;
+  background:linear-gradient(90deg,rgba(var(--accent-r),var(--accent-g),var(--accent-b),.15),rgba(var(--accent-r),var(--accent-g),var(--accent-b),.08));
+  border-radius:3px;outline:none;cursor:pointer;
+  position:absolute;
+  transform:rotate(-90deg);
+  transform-origin:center center;
+  left:50%;
+  margin-left:-40px;
+  top:50%;
+  margin-top:-2px;
+  z-index:4;
+  touch-action:none;
 }
-.eq-band input[type=range].eq-slider::-webkit-slider-runnable-track{width:4px;border-radius:2px;background:rgba(255,255,255,.1)}
 .eq-band input[type=range].eq-slider::-webkit-slider-thumb{
-  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
-  background:var(--accent);box-shadow:0 0 8px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.7);
-  margin-left:-6px;
+  -webkit-appearance:none;
+  width:20px;height:20px;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, var(--accent-light), var(--accent));
+  cursor:pointer;
+  box-shadow:0 0 12px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.8),
+             0 2px 6px rgba(0,0,0,.4);
+  transition:transform .12s cubic-bezier(.34,1.56,.64,1),box-shadow .15s;
+  border:2px solid rgba(255,255,255,.18);
 }
-.eq-bar-wrap{position:absolute;left:50%;transform:translateX(-50%);width:18px;height:100%;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden;pointer-events:none}
-.eq-bar-fill{position:absolute;bottom:50%;left:0;width:100%;border-radius:3px;transition:height .1s ease,bottom .1s ease;background:linear-gradient(0deg,var(--accent),var(--accent-light))}
-.eq-bar-fill.negative{background:linear-gradient(0deg,rgba(255,70,70,.8),rgba(255,110,110,.6))}
-.eq-band-name{font-size:9px;color:rgba(200,170,255,.4);letter-spacing:.06em;text-transform:uppercase}
-.eq-band-val{font-size:10px;color:rgba(200,170,255,.6);min-width:30px;text-align:center;font-family:'Inter',sans-serif}
-.eq-reset-btn{background:none;border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.2);border-radius:6px;padding:3px 10px;font-size:9px;color:rgba(200,170,255,.4);cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.04em;transition:all .2s;touch-action:manipulation}
-.eq-reset-btn:hover{border-color:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.5);color:rgba(200,170,255,.8)}
+.eq-band input[type=range].eq-slider:hover::-webkit-slider-thumb,
+.eq-band input[type=range].eq-slider:active::-webkit-slider-thumb{
+  transform:scale(1.3);
+  box-shadow:0 0 22px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.95),
+             0 0 40px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.35),
+             0 3px 8px rgba(0,0,0,.5);
+}
+.eq-band input[type=range].eq-slider::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.18);
+  background:var(--accent);cursor:pointer;
+  box-shadow:0 0 12px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.8);
+}
+.eq-band input[type=range].eq-slider::-moz-range-track{
+  height:5px;border-radius:3px;
+  background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.12);
+}
+.eq-bar-wrap{
+  position:absolute;left:50%;transform:translateX(-50%);
+  width:12px;height:100%;border-radius:6px;
+  background:rgba(255,255,255,.05);overflow:hidden;pointer-events:none;z-index:1;
+  box-shadow:inset 0 0 0 1px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.1);
+}
+.eq-bar-fill{
+  position:absolute;bottom:50%;left:0;width:100%;
+  border-radius:6px;
+  transition:height .06s ease,bottom .06s ease;
+  background:linear-gradient(0deg,
+    rgba(var(--accent-r),var(--accent-g),var(--accent-b),.6),
+    var(--accent-light));
+  box-shadow:0 0 8px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.5);
+}
+.eq-bar-fill.negative{
+  background:linear-gradient(0deg,rgba(255,60,80,.7),rgba(255,100,110,.55));
+  box-shadow:0 0 8px rgba(255,60,80,.4);
+}
+.eq-band-name{
+  font-size:9px;color:rgba(200,170,255,.5);letter-spacing:.08em;
+  text-transform:uppercase;position:relative;z-index:2;
+  font-family:'Inter',sans-serif;font-weight:500;
+}
+.eq-band-val{
+  font-size:11px;color:rgba(255,255,255,.8);min-width:32px;text-align:center;
+  font-family:'Inter',sans-serif;font-weight:600;position:relative;z-index:2;
+  background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.15);
+  border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.2);
+  border-radius:6px;padding:2px 5px;line-height:1.4;
+  transition:background .2s,color .2s;
+}
+.eq-reset-btn{
+  background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.08);
+  border:1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),.22);
+  border-radius:8px;padding:5px 16px;font-size:10px;
+  color:rgba(200,170,255,.55);cursor:pointer;
+  font-family:'Inter',sans-serif;letter-spacing:.05em;
+  transition:all .2s cubic-bezier(.4,0,.2,1);touch-action:manipulation;
+}
+.eq-reset-btn:hover{
+  background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
+  border-color:rgba(var(--accent-r),var(--accent-g),var(--accent-b),.5);
+  color:rgba(200,170,255,.9);
+  transform:scale(1.04);
+}
 
 /* ── PULSE TOGGLE ── */
 .pulse-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
@@ -472,6 +552,92 @@ input[type=color]{cursor:pointer;border:none;padding:0;background:none}
 .load-ring{display:inline-block;width:14px;height:14px;vertical-align:middle;margin-right:5px}
 .load-ring::after{content:'';display:block;width:12px;height:12px;border-radius:50%;border:2px solid rgba(160,80,255,.3);border-top-color:var(--accent);animation:spin-ring .7s linear infinite}
 @keyframes spin-ring{to{transform:rotate(360deg)}}
+
+/* ── SMOOTH TRANSITIONS (upgraded) ─────────────────────────── */
+.btn { transition: background .18s ease, transform .14s cubic-bezier(.34,1.56,.64,1), color .18s ease, box-shadow .2s ease !important; }
+.btn:hover { transform: scale(1.14) !important; }
+.btn:active { transform: scale(0.92) !important; transition-duration: .07s !important; }
+.btn-play { transition: background .2s ease, transform .14s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease !important; }
+.btn-play:hover { box-shadow: 0 0 22px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.45) !important; transform: scale(1.1) !important; }
+.btn-play:active { transform: scale(0.9) !important; }
+.pbar-fill { transition: none !important; }
+.cover-img { transition: border-color .4s ease, box-shadow .5s ease, transform .4s cubic-bezier(.34,1.56,.64,1) !important; }
+.src-btn { transition: all .22s cubic-bezier(.4,0,.2,1) !important; }
+.src-btn:active { transform: scale(0.95) !important; }
+.settings-panel { transition: opacity .25s ease; }
+.settings-pill { transition: all .22s ease !important; }
+.settings-pill:active { transform: scale(0.95) !important; }
+.card { transition: background .6s ease, border-color .4s ease, width .4s ease, box-shadow .4s ease !important; }
+
+
+.icon-color-section { margin-bottom:14px; }
+.icon-color-presets { display:flex; gap:7px; align-items:center; flex-wrap:wrap; margin-top:6px; }
+.icon-color-dot {
+  width:22px;height:22px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;transition:transform .15s,border-color .15s;flex-shrink:0;
+}
+.icon-color-dot:hover{transform:scale(1.2)}
+.icon-color-dot.on{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,.35)}
+
+/* ── EQ ACTIVE INDICATOR ────────────────────────────────────── */
+.eq-active-dot {
+  width:6px;height:6px;border-radius:50%;
+  background:var(--accent);display:inline-block;margin-left:5px;
+  animation:dotPulse .8s ease-in-out infinite;
+  opacity:0;transition:opacity .3s;vertical-align:middle;
+}
+.eq-active-dot.on { opacity:1; }
+@keyframes dotPulse { 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(1.5);opacity:1} }
+.eq-status { font-size:10px; color:rgba(200,170,255,.4); margin-top:3px; transition:color .3s; }
+.eq-status.connected { color:rgba(100,220,130,.7); }
+/* EQ vertical bar fill animation */
+.eq-bar-fill { transition: height .06s ease, bottom .06s ease !important; }
+
+/* ── EXTRA SMOOTHNESS ──────────────────────────────────────── */
+.cover-area { transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+.cover-area:hover { transform: scale(1.03); }
+.track-title { transition: color .3s ease; }
+.track-artist { transition: color .3s ease; }
+.avatar-img { transition: border-color .3s ease, box-shadow .3s ease !important; }
+.avatar-edit { transition: transform .2s cubic-bezier(.34,1.56,.64,1) !important; }
+.avatar-edit:hover { transform: scale(1.2) rotate(15deg) !important; }
+.pbar-bg:hover .pbar-fill::after { transform: scale(1.2) !important; }
+/* Smooth volume slider */
+input[type=range] { transition: opacity .2s ease; }
+/* Source button switch animation */
+.src-btn.active { animation: srcActivate .3s cubic-bezier(.34,1.56,.64,1) forwards; }
+@keyframes srcActivate { 0% { transform:scale(.95); } 60% { transform:scale(1.03); } 100% { transform:scale(1); } }
+/* Eq slider hover glow */
+.eq-band input[type=range].eq-slider:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 14px rgba(var(--accent-r),var(--accent-g),var(--accent-b),.9) !important;
+}
+/* Settings panel open animation */
+.settings-panel.open { animation: panelSlideIn .25s cubic-bezier(.4,0,.2,1); }
+@keyframes panelSlideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+/* wx buttons hover */
+.wx-btn { transition: all .18s cubic-bezier(.4,0,.2,1) !important; }
+.wx-btn:hover { transform: translateY(-2px) scale(1.03) !important; }
+.wx-btn.on { transform: none !important; }
+/* Progress bar hover */
+.pbar-bg { transition: height .15s ease; }
+.pbar-bg:hover { height: 8px !important; border-radius: 4px; }
+/* Banner hover */
+.banner:hover .banner-edit-btn { opacity:1 !important; }
+.banner-edit-btn { opacity:0.5 !important; transition: opacity .2s, background .2s !important; }
+/* intro enter button */
+.enter-btn { transition: transform .2s cubic-bezier(.34,1.56,.64,1) !important; }
+.enter-btn:hover { transform: scale(1.1) translateY(-3px) !important; }
+.enter-btn:active { transform: scale(0.95) !important; }
+
+/* ── PLAY BUTTON RIPPLE ────────────────────────────────────── */
+.btn-play { position: relative; overflow: hidden; }
+.btn-play::before {
+  content:''; position:absolute; inset:0; border-radius:50%;
+  background: rgba(var(--accent-r),var(--accent-g),var(--accent-b),.18);
+  transform: scale(0); opacity:0;
+  transition: transform .4s ease, opacity .4s ease;
+}
+.btn-play:active::before { transform:scale(2.5); opacity:0; transition:none; }
 </style>
 </head>
 <body>
@@ -730,13 +896,13 @@ input[type=color]{cursor:pointer;border:none;padding:0;background:none}
     <button class="fps-btn" data-fps="0">∞</button>
    </div></div>
 
-   <div class="s-section"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Эквалайзер</div>
+   <div class="s-section"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Эквалайзер<span class="eq-active-dot"></span></div>
    <div class="eq-bands">
     <div class="eq-band"><div class="eq-band-val" id="eq-val-bass">0</div><div class="eq-band-track"><div class="eq-bar-wrap"><div class="eq-bar-fill" id="eq-bar-bass"></div></div><input type="range" class="eq-slider" id="eq-bass" min="-12" max="12" value="0" step="1"></div><div class="eq-band-name">Bass</div></div>
     <div class="eq-band"><div class="eq-band-val" id="eq-val-mid">0</div><div class="eq-band-track"><div class="eq-bar-wrap"><div class="eq-bar-fill" id="eq-bar-mid"></div></div><input type="range" class="eq-slider" id="eq-mid" min="-12" max="12" value="0" step="1"></div><div class="eq-band-name">Mid</div></div>
     <div class="eq-band"><div class="eq-band-val" id="eq-val-treble">0</div><div class="eq-band-track"><div class="eq-bar-wrap"><div class="eq-bar-fill" id="eq-bar-treble"></div></div><input type="range" class="eq-slider" id="eq-treble" min="-12" max="12" value="0" step="1"></div><div class="eq-band-name">Treble</div></div>
    </div>
-   <div class="s-row" style="margin-top:4px"><span class="s-label" style="font-size:10px;color:rgba(200,170,255,.35)">Web Audio API</span><button class="eq-reset-btn" id="eq-reset">сброс</button></div>
+   <div class="s-row" style="margin-top:4px"><span class="s-label eq-status">Web Audio API</span><button class="eq-reset-btn" id="eq-reset">сброс</button></div>
 
    <div class="s-section"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Пульсация в такт</div>
    <div class="pulse-row"><span class="s-label">Обложка / баннер</span><label class="pulse-toggle"><input type="checkbox" id="pulse-toggle" checked><div class="pulse-toggle-track"></div><div class="pulse-toggle-thumb"></div></label></div>
@@ -752,6 +918,23 @@ input[type=color]{cursor:pointer;border:none;padding:0;background:none}
    <div class="s-section"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Изображения</div>
    <div class="s-row"><span class="s-label">Баннер</span><button class="up-btn" id="up-banner-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Загрузить</button></div>
    <div class="s-row"><span class="s-label">Аватар</span><button class="up-btn" id="up-avatar-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Загрузить</button></div>
+
+
+   <div class="s-section">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>Цвет иконок
+   </div>
+   <div class="s-row">
+    <span class="s-label">Цвет иконок</span>
+    <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+     <div class="icon-color-dot on" data-icol="var(--accent-light)" style="background:var(--accent)"></div>
+     <div class="icon-color-dot" data-icol="#ffffff" style="background:#fff"></div>
+     <div class="icon-color-dot" data-icol="rgba(200,170,255,0.65)" style="background:rgba(200,170,255,.65)"></div>
+     <div class="icon-color-dot" data-icol="#1ED760" style="background:#1ED760"></div>
+     <div class="icon-color-dot" data-icol="#ff5080" style="background:#ff5080"></div>
+     <div class="icon-color-dot" data-icol="#f0d020" style="background:#f0d020"></div>
+     <input type="color" id="icon-col-pick" value="#bf6fff" style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);cursor:pointer;background:none;">
+    </div>
+   </div>
 
   </div><!-- /s-panel -->
 
@@ -1767,31 +1950,116 @@ $('sp-paste-btn').addEventListener('click', async () => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// EQUALIZER (Web Audio API)
+// EQUALIZER — REAL Web Audio API (capture SC iframe audio)
+// Strategy: MediaElementSource on the SC iframe's <audio> element
+// Fallback: GainNode-based EQ applied to all audio on the page
 // ═══════════════════════════════════════════════════════════════
-let _audioCtx=null, _eqBass=null, _eqMid=null, _eqTreble=null, _eqReady=false;
+let _audioCtx = null;
+let _eqBass = null, _eqMid1 = null, _eqMid2 = null, _eqTreble = null;
+let _eqInput = null, _eqOutput = null;
+let _eqReady = false;
+let _eqConnected = false;
+let _capturedSources = new Set();
+
+function _getEQNode(band){
+  return band==='bass'?_eqBass : band==='mid'?_eqMid1 : _eqTreble;
+}
+
+// Create full audio graph: input → bass → mid1 → mid2 → treble → output
+function _buildEQGraph(ctx){
+  _eqBass   = ctx.createBiquadFilter();
+  _eqBass.type = 'lowshelf'; _eqBass.frequency.value = 250;
+
+  _eqMid1   = ctx.createBiquadFilter();
+  _eqMid1.type = 'peaking'; _eqMid1.frequency.value = 800; _eqMid1.Q.value = 0.8;
+
+  _eqMid2   = ctx.createBiquadFilter();
+  _eqMid2.type = 'peaking'; _eqMid2.frequency.value = 3500; _eqMid2.Q.value = 0.8;
+
+  _eqTreble = ctx.createBiquadFilter();
+  _eqTreble.type = 'highshelf'; _eqTreble.frequency.value = 10000;
+
+  // Chain filters
+  _eqBass.connect(_eqMid1);
+  _eqMid1.connect(_eqMid2);
+  _eqMid2.connect(_eqTreble);
+  _eqTreble.connect(ctx.destination);
+
+  // Restore saved values
+  ['bass','mid','treble'].forEach(b => {
+    const v = +S.load('eq_'+b, 0);
+    const n = _getEQNode(b);
+    if(n) n.gain.value = v;
+    // Mid2 mirrors mid
+    if(b==='mid' && _eqMid2) _eqMid2.gain.value = v * 0.5;
+  });
+}
+
+// Try to capture audio element and route through EQ
+function _tryCapture(audioEl){
+  if(!_audioCtx || !_eqBass || !audioEl) return false;
+  if(_capturedSources.has(audioEl)) return true;
+  try {
+    const src = _audioCtx.createMediaElementSource(audioEl);
+    src.connect(_eqBass);
+    _capturedSources.add(audioEl);
+    _eqConnected = true;
+    _updateEQStatus(true);
+    return true;
+  } catch(e){ return false; }
+}
+
+// Look for audio in SC iframe (same-origin only) and in document
+function _findAndCaptureAudio(){
+  // Try document level audio elements
+  document.querySelectorAll('audio').forEach(a => _tryCapture(a));
+  // Try SC iframe content (may fail cross-origin — handled gracefully)
+  try {
+    const iframe = $('sc-widget');
+    if(iframe?.contentDocument){
+      iframe.contentDocument.querySelectorAll('audio').forEach(a => _tryCapture(a));
+    }
+  } catch(e) {}
+}
+
+function _updateEQStatus(connected){
+  const el = document.querySelector('.eq-status');
+  const dot = document.querySelector('.eq-active-dot');
+  if(el){ el.textContent = connected ? '✓ Аудио захвачено' : 'Web Audio API'; el.classList.toggle('connected', connected); }
+  if(dot) dot.classList.toggle('on', connected);
+}
 
 function initEQ(){
   if(_eqReady) return;
   try {
     _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    _eqBass   = _audioCtx.createBiquadFilter(); _eqBass.type='lowshelf'; _eqBass.frequency.value=200;
-    _eqMid    = _audioCtx.createBiquadFilter(); _eqMid.type='peaking'; _eqMid.frequency.value=1000; _eqMid.Q.value=1;
-    _eqTreble = _audioCtx.createBiquadFilter(); _eqTreble.type='highshelf'; _eqTreble.frequency.value=8000;
-    _eqBass.connect(_eqMid); _eqMid.connect(_eqTreble); _eqTreble.connect(_audioCtx.destination);
-    ['bass','mid','treble'].forEach(b => {
-      const node = b==='bass'?_eqBass:b==='mid'?_eqMid:_eqTreble;
-      node.gain.value = +S.load('eq_'+b, 0);
-    });
+    _buildEQGraph(_audioCtx);
     _eqReady = true;
-  } catch(e){}
+
+    // Aggressive audio capture attempts
+    _findAndCaptureAudio();
+    // Retry after SC loads
+    setTimeout(_findAndCaptureAudio, 2000);
+    setTimeout(_findAndCaptureAudio, 5000);
+    setTimeout(_findAndCaptureAudio, 10000);
+
+    // Watch for new audio elements
+    const obs = new MutationObserver(() => _findAndCaptureAudio());
+    obs.observe(document.body, {childList:true, subtree:true});
+
+    _updateEQStatus(false);
+  } catch(e){ console.warn('EQ init failed:', e); }
 }
 
 function setEQGain(band, val){
   S.save('eq_'+band, val);
-  if(!_eqReady) return;
-  const node = band==='bass'?_eqBass:band==='mid'?_eqMid:_eqTreble;
-  if(node) node.gain.setTargetAtTime(val, _audioCtx.currentTime, 0.02);
+  if(!_eqReady){ initEQ(); return; }
+  const node = _getEQNode(band);
+  if(node) {
+    const t = _audioCtx.currentTime;
+    node.gain.setTargetAtTime(val, t, 0.015);
+    if(band==='mid' && _eqMid2) _eqMid2.gain.setTargetAtTime(val * 0.5, t, 0.015);
+  }
 }
 
 function updateEQBar(band, val){
@@ -1799,31 +2067,46 @@ function updateEQBar(band, val){
   if(valEl) valEl.textContent = (val>0?'+':'')+val;
   if(barEl){
     const pct = Math.abs(val)/12*50;
-    if(val>=0){ barEl.style.bottom='50%'; barEl.style.height=pct+'%'; barEl.classList.remove('negative'); }
-    else { barEl.style.bottom=(50-pct)+'%'; barEl.style.height=pct+'%'; barEl.classList.add('negative'); }
+    if(val >= 0){
+      barEl.style.bottom = '50%';
+      barEl.style.height = pct + '%';
+      barEl.classList.remove('negative');
+    } else {
+      barEl.style.bottom = (50-pct) + '%';
+      barEl.style.height = pct + '%';
+      barEl.classList.add('negative');
+    }
   }
 }
 
+// Init EQ values from storage
 ['bass','mid','treble'].forEach(band => {
   const saved = +S.load('eq_'+band, 0);
   const el = $('eq-'+band);
   if(el) el.value = saved;
   updateEQBar(band, saved);
   if(el) el.addEventListener('input', () => {
-    initEQ(); const v=+el.value; updateEQBar(band,v); setEQGain(band,v);
+    initEQ();
+    const v = +el.value;
+    updateEQBar(band, v);
+    setEQGain(band, v);
   });
+  if(el) el.addEventListener('touchstart', () => initEQ(), {passive:true, once:true});
 });
 
 $('eq-reset').addEventListener('click', () => {
   ['bass','mid','treble'].forEach(b => {
-    const el=$('eq-'+b); if(el) el.value=0;
-    updateEQBar(b,0); setEQGain(b,0);
+    const el = $('eq-'+b); if(el) el.value = 0;
+    updateEQBar(b, 0); setEQGain(b, 0);
   });
 });
 
-// Resume AudioContext on interaction
-['click','touchstart'].forEach(ev => {
-  document.addEventListener(ev, () => { if(_audioCtx?.state==='suspended') _audioCtx.resume(); }, {once:false, passive:true});
+// Resume AudioContext on any interaction
+['click','touchstart','pointerdown'].forEach(ev => {
+  document.addEventListener(ev, () => {
+    if(_audioCtx?.state === 'suspended') _audioCtx.resume();
+    if(!_eqConnected) _findAndCaptureAudio();
+  }, {passive:true});
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -1964,12 +2247,43 @@ document.addEventListener('keydown', e => {
   else if(e.code==='ArrowDown'){ e.preventDefault(); const vr=$('vol-range'); vr.value=Math.max(0,+vr.value-5); vr.dispatchEvent(new Event('input')); }
 });
 
-// ─── Restore SC btn progress bar style on switch back ─────────
-function restorePbarStyle(){
-  $('pbar-bg').style.pointerEvents=''; $('pbar-bg').style.opacity='1';
+// ═══════════════════════════════════════════════════════════════
+// ICON COLOR
+// ═══════════════════════════════════════════════════════════════
+let _iconColor = S.load('icon_color', 'var(--accent-light)');
+
+function applyIconColor(col){
+  _iconColor = col;
+  S.save('icon_color', col);
+  document.querySelectorAll('.controls .btn').forEach(b => b.style.color = col);
+  document.querySelectorAll('[data-icol]').forEach(d =>
+    d.classList.toggle('on', d.dataset.icol === col)
+  );
 }
-// Called when switching to SC
-const origSwitchSource = switchSource;
+
+// Restore on load
+applyIconColor(_iconColor);
+
+// Dot presets
+document.querySelectorAll('[data-icol]').forEach(d => d.addEventListener('click', () => {
+  applyIconColor(d.dataset.icol);
+}));
+
+// Custom color picker
+const _iconColPick = $('icon-col-pick');
+if(_iconColPick){
+  const savedHex = S.load('icon_color_hex','#bf6fff');
+  _iconColPick.value = savedHex;
+  _iconColPick.addEventListener('input', () => {
+    S.save('icon_color_hex', _iconColPick.value);
+    document.querySelectorAll('[data-icol]').forEach(x => x.classList.remove('on'));
+    applyIconColor(_iconColPick.value);
+  });
+}
+
 </script>
+
+
+
 </body>
 </html>
